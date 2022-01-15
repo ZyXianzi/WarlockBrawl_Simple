@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+# 设置总路由
 urlpatterns = [
     path('', include('game.urls.index')),
     path('admin/', admin.site.urls),

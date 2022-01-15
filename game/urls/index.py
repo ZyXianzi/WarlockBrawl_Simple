@@ -1,6 +1,7 @@
 from django.urls import path, include
 from game.views.index import index
 
+# 设置game的分路由
 urlpatterns = [
     path("", index, name="index"),
     path("menu/", include("game.urls.menu.index")),
