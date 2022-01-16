@@ -3,7 +3,7 @@ export class WarlockGame {
     constructor(id) {
         this.id = id;
         this.$warlock_game = $('#' + id);
-        this.menu = new WarlockGameMenu(this);
+        // this.menu = new WarlockGameMenu(this);
         this.playground = new WarlockGamePlayground(this);
         this.settings = new WarlockGameSettings(this);
 
@@ -42,13 +42,9 @@ export class WarlockGame {
 }class WarlockGamePlayground {
     constructor(root) {
         this.root = root;
-        this.$playground = $(`
-<div>
-游戏界面
-</div>
-`)
+        this.$playground = $(`<div class="warlock_game_playground"></div>`);
         
-        this.hide();
+        // this.hide();
         this.root.$warlock_game.append(this.$playground);
 
         this.start();
