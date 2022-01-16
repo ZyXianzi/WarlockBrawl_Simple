@@ -1,5 +1,5 @@
 // 总脚本
-class WarlockGame {
+export class WarlockGame {
     constructor(id) {
         this.id = id;
         this.$warlock_game = $('#' + id);
