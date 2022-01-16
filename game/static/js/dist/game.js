@@ -134,7 +134,13 @@ class GameMap extends WarlockGameObject {
     }
 
     update() {
+        this.render();
 
+    }
+
+    render() {
+        this.ctx.fillStyle = "rgba(0, 0, 0)";
+        this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     }
 }
 class WarlockGameMenu {
