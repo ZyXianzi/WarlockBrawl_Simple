@@ -5,7 +5,7 @@ export class WarlockGame {
         this.$warlock_game = $('#' + id);
         // this.menu = new WarlockGameMenu(this);
         this.playground = new WarlockGamePlayground(this);
-        this.settings = new WarlockGameSettings(this);
+        // this.settings = new WarlockGameSettings(this);
 
         this.start();
     }
@@ -13,7 +13,8 @@ export class WarlockGame {
     start() {
 
     }
-}class WarlockGameSettings {
+}
+class WarlockGameSettings {
     constructor(root) {
         this.root = root;
         this.$settings = $(`
@@ -46,6 +47,9 @@ export class WarlockGame {
         
         // this.hide();
         this.root.$warlock_game.append(this.$playground);
+        this.width = this.$playground.width();
+        this.height = this.$playground.height();
+        this.game_map = new GameMap(this);
 
         this.start();
     }
@@ -61,7 +65,8 @@ export class WarlockGame {
     hide() {  // 关闭playground界面
         this.$playground.hide();
     }
-}let WARLOCK_GAME_OBJECTS = [];
+}
+let WARLOCK_GAME_OBJECTS = [];
 
 class WarlockGameObject {
     constructor() {
@@ -112,15 +117,16 @@ let WARLOCK_GAME_ANIMATION = function(timestamp) {
     requestAnimationFrame(WARLOCK_GAME_ANIMATION);
 }
 
-requestAnimationFrame(WARLOCK_GAME_ANIMATION);class GameMap extends WarlockGameObject {
+requestAnimationFrame(WARLOCK_GAME_ANIMATION);  // 每秒调用60次
+class GameMap extends WarlockGameObject {
     constructor(playground) {
         super();  // 调用基类的构造函数
         this.playground = playground;
         this.$canvas = $(`<canvas></canvas>`);
         this.ctx = this.$canvas[0].getContext(`2d`);
-        this.ctx.$canvas.width = this.playground.width;
-        this.ctx.$canvas.height = this.playground.height;
-        this.playground.$playground.append(this.canvas);
+        this.ctx.canvas.width = this.playground.width;
+        this.ctx.canvas.height = this.playground.height;
+        this.playground.$playground.append(this.$canvas);
     }
 
     start() {
@@ -130,7 +136,8 @@ requestAnimationFrame(WARLOCK_GAME_ANIMATION);class GameMap extends WarlockGameO
     update() {
 
     }
-}class WarlockGameMenu {
+}
+class WarlockGameMenu {
     constructor(root) {  // root即为前端传入的对象
         this.root = root;
         this.$menu = $(`

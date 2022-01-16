@@ -7,6 +7,7 @@ class WarlockGamePlayground {
         this.root.$warlock_game.append(this.$playground);
         this.width = this.$playground.width();
         this.height = this.$playground.height();
+        this.game_map = new GameMap(this);
 
         this.start();
     }
