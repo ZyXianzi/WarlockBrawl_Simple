@@ -5,18 +5,61 @@ class Player extends WarlockGameObject {
         this.ctx = this.playground.game_map.ctx;
         this.x = x;
         this.y = y;
+        this.vx = 0;
+        this.vy = 0;
+        this.move_length = 0;
         this.radius = radius;
         this.color = color;
-        this.speed = speed;
+        this.speed = speed;  // 单位：s
         this.is_me = is_me;
         this.eps = 0.1;
     }
 
     start() {
+        if (this.is_me) {
+            this.add_listening_events();
+        }
+    }
 
+    // 全局监听函数，屏蔽右键菜单并接收鼠标事件
+    add_listening_events() {
+        let outer = this;
+        this.playground.game_map.$canvas.on("contextmenu", function() {
+            return false;
+        });
+        this.playground.game_map.$canvas.mousedown(function(e) {
+            if (e.which === 3) {
+                outer.move_to(e.clientX, e.clientY);
+            }
+        });
+    }
+
+    // 获取当前位置与目标位置间的距离
+    get_dist(x1, y1, x2, y2) {
+        let dx = x1 - x2;
+        let dy = y1 - y2;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // 移动玩家到目标位置
+    move_to(tx, ty) {
+        this.move_length = this.get_dist(this.x, this.y, tx, ty);
+        let angle = Math.atan2(ty - this.y, tx - this.x);
+        this.vx = Math.cos(angle);
+        this.vy = Math.sin(angle);
     }
 
     update() {
+        if (this.move_length < this.eps) {
+            this.move_length = 0;
+            this.vx = this.vy = 0;
+        }
+        else {
+            let moved = Math.min(this.move_length, this.speed * this.timedelta / 1000);
+            this.x += this.vx * moved;
+            this.y += this.vy * moved;
+            this.move_length -= moved;
+        }
         this.render();
     }
 
