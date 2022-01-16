@@ -49,4 +49,4 @@ let WARLOCK_GAME_ANIMATION = function(timestamp) {
     requestAnimationFrame(WARLOCK_GAME_ANIMATION);
 }
 
-requestAnimationFrame(WARLOCK_GAME_ANIMATION);  // 每秒调用60次
+requestAnimationFrame(WARLOCK_GAME_ANIMATION);  // 自动刷新画面
