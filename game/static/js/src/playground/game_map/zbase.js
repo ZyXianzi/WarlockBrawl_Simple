@@ -15,7 +15,6 @@ class GameMap extends WarlockGameObject {
 
     update() {
         this.render();
-
     }
 
     render() {
