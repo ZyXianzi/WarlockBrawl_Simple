@@ -41,12 +41,13 @@ class Player extends WarlockGameObject {
         });
 
         this.playground.game_map.$canvas.mousedown(function(e) {
+            const rect = outer.ctx.canvas.getBoundingClientRect();  // 记录画布与屏幕的相对位置
             if (e.which === 3) {  // 按下鼠标右键移动
-                outer.move_to(e.clientX, e.clientY);
+                outer.move_to(e.clientX - rect.left, e.clientY - rect.top);
             }
             else if (e.which === 1) {  // 按下鼠标左键发射技能
                 if (outer.cur_skill === "fireball") {
-                    outer.shoot_fireball(e.clientX, e.clientY)
+                    outer.shoot_fireball(e.clientX - rect.left, e.clientY.rect.top)
                 }
                 outer.cur_skill = null;  // 发射完取消技能握持
             }
