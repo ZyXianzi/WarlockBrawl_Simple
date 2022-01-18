@@ -13,7 +13,7 @@ class WarlockGameMenu {
         </div>
         <br>
         <div class="warlock_game_menu_field_item warlock_game_menu_field_item_settings">
-            游戏设置
+            退出登录
         </div>
     </div>
 </div>
@@ -42,6 +42,7 @@ class WarlockGameMenu {
         });
         this.$settings.click(function () {
             console.log("click settings");
+            outer.root.settings.logout_on_remote();
         });
     }
 

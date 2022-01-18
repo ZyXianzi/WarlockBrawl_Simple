@@ -178,7 +178,18 @@ class Settings {
     }
 
     logout_on_remote() {  // 在远程服务器上登出
+        if (this.platform === "ACAPP") return false;  // 仅在web端执行
 
+        $.ajax({
+            url: "https://app1186.acapp.acwing.com.cn/settings/logout/",
+            type: "GET",
+            success: function(resp) {
+                console.log(resp);
+                if (resp.result === "success") {
+                    location.reload();
+                }
+            }
+        });
     }
 
     register() {  // 打开注册界面
@@ -657,7 +668,7 @@ class WarlockGameMenu {
         </div>
         <br>
         <div class="warlock_game_menu_field_item warlock_game_menu_field_item_settings">
-            游戏设置
+            退出登录
         </div>
     </div>
 </div>
@@ -686,6 +697,7 @@ class WarlockGameMenu {
         });
         this.$settings.click(function () {
             console.log("click settings");
+            outer.root.settings.logout_on_remote();
         });
     }
 
