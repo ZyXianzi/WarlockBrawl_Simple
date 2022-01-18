@@ -3,7 +3,7 @@ class WarlockGamePlayground {
         this.root = root;
         this.$playground = $(`<div class="warlock_game_playground"></div>`);
         
-        // this.hide();
+        this.hide();
 
         this.start();
     }
@@ -23,7 +23,7 @@ class WarlockGamePlayground {
 
     show() {  // 打开playground界面
         this.$playground.show();
-        // 初始化幕布
+        // 打开playground界面后再初始化幕布大小
         this.root.$warlock_game.append(this.$playground);
         this.width = this.$playground.width();
         this.height = this.$playground.height();

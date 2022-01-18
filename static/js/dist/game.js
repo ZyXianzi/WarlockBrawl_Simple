@@ -3,7 +3,7 @@ export class WarlockGame {
     constructor(id) {
         this.id = id;
         this.$warlock_game = $('#' + id);
-        // this.menu = new WarlockGameMenu(this);
+        this.menu = new WarlockGameMenu(this);
         this.playground = new WarlockGamePlayground(this);
         // this.settings = new WarlockGameSettings(this);
 
@@ -45,17 +45,7 @@ class WarlockGameSettings {
         this.root = root;
         this.$playground = $(`<div class="warlock_game_playground"></div>`);
         
-        // this.hide();
-        this.root.$warlock_game.append(this.$playground);
-        this.width = this.$playground.width();
-        this.height = this.$playground.height();
-        this.game_map = new GameMap(this);
-        this.players = [];
-        this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, "white", this.height * 0.15, true))
-
-        for (let i = 0; i < 5; i ++) {
-            this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, this.get_random_color(), this.height * 0.15, false))
-        }
+        this.hide();
 
         this.start();
     }
@@ -75,6 +65,17 @@ class WarlockGameSettings {
 
     show() {  // 打开playground界面
         this.$playground.show();
+        // 打开playground界面后再初始化幕布大小
+        this.root.$warlock_game.append(this.$playground);
+        this.width = this.$playground.width();
+        this.height = this.$playground.height();
+        this.game_map = new GameMap(this);
+        this.players = [];
+        this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, "white", this.height * 0.15, true))
+
+        for (let i = 0; i < 5; i++) {
+            this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, this.get_random_color(), this.height * 0.15, false))
+        }
     }
 
     hide() {  // 关闭playground界面
@@ -246,12 +247,13 @@ class FireBall extends WarlockGameObject {
         });
 
         this.playground.game_map.$canvas.mousedown(function(e) {
+            const rect = outer.ctx.canvas.getBoundingClientRect();  // 记录画布与屏幕的相对位置
             if (e.which === 3) {  // 按下鼠标右键移动
-                outer.move_to(e.clientX, e.clientY);
+                outer.move_to(e.clientX - rect.left, e.clientY - rect.top);
             }
             else if (e.which === 1) {  // 按下鼠标左键发射技能
                 if (outer.cur_skill === "fireball") {
-                    outer.shoot_fireball(e.clientX, e.clientY)
+                    outer.shoot_fireball(e.clientX - rect.left, e.clientY - rect.top)
                 }
                 outer.cur_skill = null;  // 发射完取消技能握持
             }

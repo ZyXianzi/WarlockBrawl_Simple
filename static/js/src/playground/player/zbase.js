@@ -47,7 +47,7 @@ class Player extends WarlockGameObject {
             }
             else if (e.which === 1) {  // 按下鼠标左键发射技能
                 if (outer.cur_skill === "fireball") {
-                    outer.shoot_fireball(e.clientX - rect.left, e.clientY.rect.top)
+                    outer.shoot_fireball(e.clientX - rect.left, e.clientY - rect.top)
                 }
                 outer.cur_skill = null;  // 发射完取消技能握持
             }
