@@ -24,10 +24,10 @@ class Settings {
         </div>
         <div class="warlock_game_settings_submit">
             <div class="warlock_game_settings_item">
-                <button>注册</button>
+                <button>登录</button>
             </div>
         </div>
-        <div class="warlock_game_settings_error_messages">
+        <div class="warlock_game_settings_error_message">
         </div>
         <div class="warlock_game_settings_option">
             注册
@@ -50,12 +50,12 @@ class Settings {
                 <input type="text" placeholder="用户名">
             </div>
         </div>
-        <div class="warlock_game_settings_password">
+        <div class="warlock_game_settings_password warlock_game_settings_password_first">
             <div class="warlock_game_settings_item">
                 <input type="password" placeholder="密码">
             </div>
         </div>
-        <div class="warlock_game_settings_password">
+        <div class="warlock_game_settings_password warlock_game_settings_password_second">
             <div class="warlock_game_settings_item">
                 <input type="password" placeholder="确认密码">
             </div>
@@ -65,7 +65,7 @@ class Settings {
                 <button>注册</button>
             </div>
         </div>
-        <div class="warlock_game_settings_error_messages">
+        <div class="warlock_game_settings_error_message">
         </div>
         <div class="warlock_game_settings_option">
             登录
@@ -82,9 +82,20 @@ class Settings {
 </div>
 `);
         this.$login = this.$settings.find(".warlock_game_settings_login");
+        this.$login_username = this.$login.find(".warlock_game_settings_username input");
+        this.$login_password = this.$login.find(".warlock_game_settings_password input");
+        this.$login_submit = this.$login.find(".warlock_game_settings_submit button");
+        this.$login_error_message = this.$login.find(".warlock_game_settings_error_message");
+        this.$login_register = this.$login.find(".warlock_game_settings_option");
         this.$login.hide();
 
         this.$register = this.$settings.find(".warlock_game_settings_register");
+        this.$register_username = this.$register.find(".warlock_game_settings_username input");
+        this.$register_password = this.$register.find(".warlock_game_settings_password_first input");
+        this.$register_password_confirm = this.$register.find(".warlock_game_settings_password_second input");
+        this.$register_submit = this.$register.find(".warlock_game_settings_submit button");
+        this.$register_error_message = this.$register.find(".warlock_game_settings_error_message");
+        this.$register_login = this.$register.find(".warlock_game_settings_option");
         this.$register.hide();
 
         this.root.$warlock_game.append(this.$settings);
@@ -94,6 +105,26 @@ class Settings {
 
     start() {
         this.getinfo();
+        this.add_listening_events();
+    }
+
+    add_listening_events() {
+        this.add_listening_events_login();
+        this.add_listening_events_register();
+    }
+
+    add_listening_events_login() {
+        let outer = this;
+        this.$login_register.click(function() {
+            outer.register();
+        });
+    }
+
+    add_listening_events_register() {
+        let outer = this;
+        this.$register_login.click(function() {
+            outer.login();
+        });
     }
 
     register() {  // 打开注册界面
