@@ -118,6 +118,9 @@ class Settings {
         this.$login_register.click(function() {
             outer.register();
         });
+        this.$login_submit.click(function() {
+            outer.login_on_remote();
+        });
     }
 
     add_listening_events_register() {
@@ -125,6 +128,39 @@ class Settings {
         this.$register_login.click(function() {
             outer.login();
         });
+    }
+
+    login_on_remote() {  // 在远程服务器上登录
+        let outer = this;
+        let username = this.$login_username.val();
+        let password = this.$login_password.val();
+        this.$login_error_message.empty();
+
+        $.ajax({
+            url: "https://app1186.acapp.acwing.com.cn/settings/login/",
+            type: "GET",
+            data: {
+                username: username,
+                password: password,
+            },
+            success: function(resp) {
+                console.log(resp);
+                if (resp.result === "success") {
+                    location.reload();
+                }
+                else {
+                    outer.$login_error_message.html(resp.result);
+                }
+            }
+        });
+    }
+
+    register_on_remote() {  // 在远程服务器上注册
+
+    }
+
+    logout_on_remote() {  // 在远程服务器上登出
+
     }
 
     register() {  // 打开注册界面
