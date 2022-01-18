@@ -24,7 +24,7 @@ class Settings {
         </div>
         <div class="warlock_game_settings_submit">
             <div class="warlock_game_settings_item">
-                <button>注册</button>
+                <button>登录</button>
             </div>
         </div>
         <div class="warlock_game_settings_error_messages">
@@ -124,7 +124,7 @@ class Settings {
                     outer.root.menu.show();
                 }
                 else {
-                    outer.register();
+                    outer.login();
                 }
             }
         })

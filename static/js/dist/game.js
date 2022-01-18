@@ -142,7 +142,7 @@ class Settings {
                     outer.root.menu.show();
                 }
                 else {
-                    outer.register();
+                    outer.login();
                 }
             }
         })
