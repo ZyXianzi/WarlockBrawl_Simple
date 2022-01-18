@@ -42,7 +42,7 @@ class Settings {
         </div>
         <div class="warlock_game_settings_submit">
             <div class="warlock_game_settings_item">
-                <button>登录</button>
+                <button>注册</button>
             </div>
         </div>
         <div class="warlock_game_settings_error_messages">
