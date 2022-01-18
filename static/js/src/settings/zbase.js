@@ -42,7 +42,42 @@ class Settings {
         </div>
     </div>
     <div class="warlock_game_settings_register">
-
+        <div class="warlock_game_settings_title">
+            注册
+        </div>
+        <div class="warlock_game_settings_username">
+            <div class="warlock_game_settings_item">
+                <input type="text" placeholder="用户名">
+            </div>
+        </div>
+        <div class="warlock_game_settings_password">
+            <div class="warlock_game_settings_item">
+                <input type="password" placeholder="密码">
+            </div>
+        </div>
+        <div class="warlock_game_settings_password">
+            <div class="warlock_game_settings_item">
+                <input type="password" placeholder="确认密码">
+            </div>
+        </div>
+        <div class="warlock_game_settings_submit">
+            <div class="warlock_game_settings_item">
+                <button>注册</button>
+            </div>
+        </div>
+        <div class="warlock_game_settings_error_messages">
+        </div>
+        <div class="warlock_game_settings_option">
+            登录
+        </div>
+        <br>
+        <div class="warlock_game_settings_acwing">
+            <img width="30" src="https://app1186.acapp.acwing.com.cn/static/image/settings/acwing_logo.png">
+            <br>
+            <div>
+                AcWing一键登录
+            </div>
+        </div>
     </div>
 </div>
 `);
@@ -89,7 +124,7 @@ class Settings {
                     outer.root.menu.show();
                 }
                 else {
-                    outer.login();
+                    outer.register();
                 }
             }
         })
