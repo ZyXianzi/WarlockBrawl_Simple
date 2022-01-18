@@ -18,6 +18,7 @@ class WarlockGameMenu {
     </div>
 </div>
 `);
+        this.$menu.hide();
         this.root.$warlock_game.append(this.$menu);  // 创建主菜单
         this.$single_mode = this.$menu.find('.warlock_game_menu_field_item_single_mode');  // 添加三个按钮
         this.$multi_mode = this.$menu.find('.warlock_game_menu_field_item_multi_mode');

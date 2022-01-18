@@ -1,11 +1,13 @@
 // 总脚本
 export class WarlockGame {
-    constructor(id) {
+    constructor(id, AcWingOS) {
         this.id = id;
         this.$warlock_game = $('#' + id);
+        this.AcWingOS = AcWingOS;
+
+        this.settings = new Settings(this);
         this.menu = new WarlockGameMenu(this);
         this.playground = new WarlockGamePlayground(this);
-        // this.settings = new WarlockGameSettings(this);
 
         this.start();
     }
@@ -14,31 +16,59 @@ export class WarlockGame {
 
     }
 }
-class WarlockGameSettings {
+class Settings {
     constructor(root) {
         this.root = root;
-        this.$settings = $(`
-<div>
-设置界面
-</div>
-`)
-
-        this.hide();
-        this.root.$warlock_game.append(this.$settings);
+        this.platform = "WEB";
+        if (this.root.AcWingOS) this.platform = "ACAPP";
+        this.username = "";
+        this.photo = "";
 
         this.start();
     }
 
     start() {
+        this.getinfo();
+    }
 
+    register() {  // 打开注册界面
+
+    }
+
+    login() {  // 打开登录界面
+
+    }
+
+    getinfo() {
+        let outer = this;
+
+        $.ajax({
+            url: "https://app1186.acapp.acwing.com.cn/settings/getinfo/",
+            type: "GET",
+            data: {
+                platform: outer.platform,
+            },
+            success: function(resp) {
+                console.log(resp);
+                if (resp.result === "success") {
+                    outer.username = resp.username;
+                    outer.photo = resp.photo;
+                    outer.hide();
+                    outer.root.menu.show();
+                }
+                else {
+                    outer.login();
+                }
+            }
+        })
     }
 
     show() {  // 打开settings界面
-        this.$settings.show();
+       
     }
 
     hide() {  // 关闭settings界面
-        this.$settings.hide();
+        
     }
 }class WarlockGamePlayground {
     constructor(root) {
@@ -226,6 +256,11 @@ class FireBall extends WarlockGameObject {
         this.spent_time = 0;  // 记录游戏时间
 
         this.cur_skill = null;  // 记录当前是否握持有技能
+
+        if (this.is_me) {
+            this.img = new Image(); // canvas用图片填充圆形
+            this.img.src = this.playground.root.settings.photo;
+        }
     }
 
     start() {
@@ -362,10 +397,21 @@ class FireBall extends WarlockGameObject {
     }
 
     render() {
-        this.ctx.beginPath();
-        this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);  // 生成圆形
-        this.ctx.fillStyle = this.color;
-        this.ctx.fill();
+        if (this.is_me) {  // canvas用图片填充圆形
+            this.ctx.save();
+            this.ctx.beginPath();
+            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            this.ctx.stroke();
+            this.ctx.clip();
+            this.ctx.drawImage(this.img, this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+            this.ctx.restore();
+        }
+        else {
+            this.ctx.beginPath();
+            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);  // 生成圆形
+            this.ctx.fillStyle = this.color;
+            this.ctx.fill();
+        }
     }
 
     
@@ -464,6 +510,7 @@ class WarlockGameMenu {
     </div>
 </div>
 `);
+        this.$menu.hide();
         this.root.$warlock_game.append(this.$menu);  // 创建主菜单
         this.$single_mode = this.$menu.find('.warlock_game_menu_field_item_single_mode');  // 添加三个按钮
         this.$multi_mode = this.$menu.find('.warlock_game_menu_field_item_multi_mode');
