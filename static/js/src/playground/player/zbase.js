@@ -15,7 +15,7 @@ class Player extends WarlockGameObject {
         this.color = color;  // 颜色
         this.speed = speed;  // 单位：s
         this.is_me = is_me;  // 判断是否为玩家
-        this.eps = 0.1;  // 坐标精度
+        this.eps = 0.01;  // 坐标精度
         this.friction = 0.9;  // 摩擦力
         this.spent_time = 0;  // 记录游戏时间
 
@@ -32,13 +32,13 @@ class Player extends WarlockGameObject {
             this.add_listening_events();
         }
         else {  // ai随机移动
-            let rx = Math.random() * this.playground.width;
-            let ry = Math.random() * this.playground.height;
+            let rx = Math.random() * this.playground.width / this.playground.scale;
+            let ry = Math.random() * this.playground.height / this.playground.scale;
             this.move_to(rx, ry);
         }
     }
 
-    // 全局监听函数，屏蔽右键菜单并接收用户操作
+    // 全局监听函数
     add_listening_events() {
         let outer = this;
         this.playground.game_map.$canvas.on("contextmenu", function() {
@@ -48,11 +48,11 @@ class Player extends WarlockGameObject {
         this.playground.game_map.$canvas.mousedown(function(e) {
             const rect = outer.ctx.canvas.getBoundingClientRect();  // 记录画布与屏幕的相对位置
             if (e.which === 3) {  // 按下鼠标右键移动
-                outer.move_to(e.clientX - rect.left, e.clientY - rect.top);
+                outer.move_to((e.clientX - rect.left) / outer.playground.scale, (e.clientY - rect.top) / outer.playground.scale);
             }
             else if (e.which === 1) {  // 按下鼠标左键发射技能
                 if (outer.cur_skill === "fireball") {
-                    outer.shoot_fireball(e.clientX - rect.left, e.clientY - rect.top)
+                    outer.shoot_fireball((e.clientX - rect.left) / outer.playground.scale, (e.clientY - rect.top) / outer.playground.scale)
                 }
                 outer.cur_skill = null;  // 发射完取消技能握持
             }
@@ -69,13 +69,13 @@ class Player extends WarlockGameObject {
     // 发射火球
     shoot_fireball(tx, ty) {
         let x = this.x, y = this.y;
-        let radius = this.playground.height * 0.01;
+        let radius = 0.01;
         let angle = Math.atan2(ty - this.y, tx - this.x);
         let vx = Math.cos(angle), vy = Math.sin(angle);
         let color = "orange";
-        let speed = this.playground.height * 0.5;
-        let move_length = this.playground.height * 1;
-        new FireBall(this.playground, this, x, y, vx, vy, radius, color, speed, move_length, this.playground.height * 0.01);
+        let speed = 0.5;
+        let move_length = 1;
+        new FireBall(this.playground, this, x, y, vx, vy, radius, color, speed, move_length, 0.01);
     }
 
     // 获取当前位置与目标位置间的距离
@@ -109,7 +109,7 @@ class Player extends WarlockGameObject {
         }
 
         this.radius -= damage;  // 半径作为血量
-        if (this.radius < 10) {
+        if (this.radius < this.eps) {
             this.destroy();
             return false;
         }
@@ -120,6 +120,11 @@ class Player extends WarlockGameObject {
     }
 
     update() {
+        this.update_move();
+        this.render();
+    }
+
+    update_move() {
         this.spent_time += this.timedelta / 1000;  // 记录时间
 
         // ai射击玩家
@@ -129,10 +134,10 @@ class Player extends WarlockGameObject {
             let targety = player.y + player.speed * player.vy * this.timedelta / 1000 * 0.3;
             if (player.radius > 10) {
                 this.shoot_fireball(targetx, targety);
-            }     
+            }
         }
 
-        if (this.damage_speed > 100) {
+        if (this.damage_speed > this.eps) {
             this.vx = this.vy = 0;
             this.move_length = 0;
             this.x += this.damage_x * this.damage_speed * this.timedelta / 1000;
@@ -145,8 +150,8 @@ class Player extends WarlockGameObject {
                 this.vx = this.vy = 0;
 
                 if (!this.is_me) {  // ai随机移动                                     
-                    let rx = Math.random() * this.playground.width;
-                    let ry = Math.random() * this.playground.height;
+                    let rx = Math.random() * this.playground.width / this.playground.scale;
+                    let ry = Math.random() * this.playground.height / this.playground.scale;
                     this.move_to(rx, ry);
                 }
             }
@@ -157,36 +162,33 @@ class Player extends WarlockGameObject {
                 this.move_length -= moved;
             }
         }
-        this.render();
     }
 
     render() {
+        let scale = this.playground.scale
         if (this.is_me) {  // canvas用图片填充圆形
             this.ctx.save();
             this.ctx.beginPath();
-            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+            this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
             this.ctx.stroke();
             this.ctx.clip();
-            this.ctx.drawImage(this.img, this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+            this.ctx.drawImage(this.img, (this.x - this.radius) * scale, (this.y - this.radius) * scale, this.radius * 2 * scale, this.radius * 2 * scale);
             this.ctx.restore();
         }
         else {
             this.ctx.beginPath();
-            this.ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);  // 生成圆形
+            this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);  // 生成圆形
             this.ctx.fillStyle = this.color;
             this.ctx.fill();
         }
     }
 
-    
     on_destroy() {
-        /*
-        for (let i = 0; i < this.playground.players.length; i ++) {
-            if (this.playground.player[i] === this) {
+        for (let i = 0; i < this.playground.players.length; i++) {
+            if (this.playground.players[i] === this) {
                 this.playground.players.splice(i, 1);
             }
         }
-        */
     }
     
 }

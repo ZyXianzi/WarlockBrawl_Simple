@@ -4,6 +4,7 @@ class WarlockGamePlayground {
         this.$playground = $(`<div class="warlock_game_playground"></div>`);
         
         this.hide();
+        this.root.$warlock_game.append(this.$playground);
 
         this.start();
     }
@@ -18,21 +19,36 @@ class WarlockGamePlayground {
     }
 
     start() {
+        let outer = this;
+        $(window).resize(function() {  // 用户改变窗口大小时触发
+            outer.resize();
+        });
+    }
 
+    resize() {  // 渲染地图为16：9
+        this.width = this.$playground.width();
+        this.height = this.$playground.height();
+        let unit = Math.min(this.width / 16, this.height / 9);
+        this.width = unit * 16;
+        this.height = unit * 9;
+        this.scale = this.height;  // 设定基准
+
+        if (this.game_map) this.game_map.resize();
     }
 
     show() {  // 打开playground界面
         this.$playground.show();
         // 打开playground界面后再初始化幕布大小
-        this.root.$warlock_game.append(this.$playground);
+        this.resize();
+
         this.width = this.$playground.width();
         this.height = this.$playground.height();
         this.game_map = new GameMap(this);
         this.players = [];
-        this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, "white", this.height * 0.15, true))
+        this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "white", 0.15, true))
 
         for (let i = 0; i < 5; i++) {
-            this.players.push(new Player(this, this.width / 2, this.height / 2, this.height * 0.05, this.get_random_color(), this.height * 0.15, false))
+            this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, this.get_random_color(), 0.15, false))
         }
     }
 
