@@ -342,20 +342,27 @@ class Settings {
         if (this.game_map) this.game_map.resize();
     }
 
-    show() {  // 打开playground界面
+    show(mode) {  // 打开playground界面
         this.$playground.show();
         // 打开playground界面后再初始化幕布大小
-        this.resize();
-
         this.width = this.$playground.width();
         this.height = this.$playground.height();
         this.game_map = new GameMap(this);
-        this.players = [];
-        this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "white", 0.15, true))
+        // 打开地图后再初始化地图大小
+        this.resize();
 
-        for (let i = 0; i < 5; i++) {
-            this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, this.get_random_color(), 0.15, false))
+        this.players = [];
+        this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "white", 0.15, "me", this.root.settings.username, this.root.settings.photo))
+
+        if (mode === "single mode") {
+            for (let i = 0; i < 5; i++) {
+                this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, this.get_random_color(), 0.15, "robot"))
+            }
         }
+        else if (mode === "multi mode") {
+
+        }
+        
     }
 
     hide() {  // 关闭playground界面
@@ -486,7 +493,7 @@ class FireBall extends WarlockGameObject {
         this.ctx.fill();
     }
 }class Player extends WarlockGameObject {
-    constructor(playground, x, y, radius, color, speed, is_me) {
+    constructor(playground, x, y, radius, color, speed, character, username, photo) {
         super();
         this.playground = playground;
         this.ctx = this.playground.game_map.ctx;
@@ -501,21 +508,23 @@ class FireBall extends WarlockGameObject {
         this.radius = radius;  // 半径
         this.color = color;  // 颜色
         this.speed = speed;  // 单位：s
-        this.is_me = is_me;  // 判断是否为玩家
+        this.character = character;  // 判断player类型
+        this.username = username;  // 用户名
+        this.photo = photo;  // 头像
         this.eps = 0.01;  // 坐标精度
         this.friction = 0.9;  // 摩擦力
         this.spent_time = 0;  // 记录游戏时间
 
         this.cur_skill = null;  // 记录当前是否握持有技能
 
-        if (this.is_me) {
+        if (this.character !== "robot") {
             this.img = new Image(); // canvas用图片填充圆形
-            this.img.src = this.playground.root.settings.photo;
+            this.img.src = this.photo;
         }
     }
 
     start() {
-        if (this.is_me) {
+        if (this.character === "me") {
             this.add_listening_events();
         }
         else {  // ai随机移动
@@ -615,7 +624,7 @@ class FireBall extends WarlockGameObject {
         this.spent_time += this.timedelta / 1000;  // 记录时间
 
         // ai射击玩家
-        if (!this.is_me && this.spent_time > 3 && Math.random() < 1 / 300.0) {
+        if (this.character === "robot" && this.spent_time > 3 && Math.random() < 1 / 300.0) {
             let player = this.playground.players[0];
             let targetx = player.x + player.speed * player.vx * this.timedelta / 1000 * 0.3;
             let targety = player.y + player.speed * player.vy * this.timedelta / 1000 * 0.3;
@@ -636,7 +645,7 @@ class FireBall extends WarlockGameObject {
                 this.move_length = 0;
                 this.vx = this.vy = 0;
 
-                if (!this.is_me) {  // ai随机移动                                     
+                if (this.character === "robot") {  // ai随机移动                                     
                     let rx = Math.random() * this.playground.width / this.playground.scale;
                     let ry = Math.random() * this.playground.height / this.playground.scale;
                     this.move_to(rx, ry);
@@ -653,7 +662,7 @@ class FireBall extends WarlockGameObject {
 
     render() {
         let scale = this.playground.scale
-        if (this.is_me) {  // canvas用图片填充圆形
+        if (this.character !== "robot") {  // canvas用图片填充圆形
             this.ctx.save();
             this.ctx.beginPath();
             this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
@@ -788,10 +797,11 @@ class WarlockGameMenu {
         let outer = this;
         this.$single_mode.click(function() {
             outer.hide();
-            outer.root.playground.show();
+            outer.root.playground.show("single mode");
         });
         this.$multi_mode.click(function () {
-            console.log("click multi mode");
+            outer.hide();
+            outer.root.playground.show("multi mode");
         });
         this.$settings.click(function () {
             console.log("click settings");
