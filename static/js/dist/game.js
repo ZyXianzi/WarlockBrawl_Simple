@@ -343,6 +343,7 @@ class Settings {
     }
 
     show(mode) {  // 打开playground界面
+        let outer = this;
         this.$playground.show();
         // 打开playground界面后再初始化幕布大小
         this.width = this.$playground.width();
@@ -360,9 +361,12 @@ class Settings {
             }
         }
         else if (mode === "multi mode") {
+            this.mps = new MultiPlayerSocket(this);
 
+            this.mps.ws.onopen = function() {
+                outer.mps.send_create_player();
+            }
         }
-        
     }
 
     hide() {  // 关闭playground界面
@@ -421,7 +425,29 @@ let WARLOCK_GAME_ANIMATION = function(timestamp) {
 }
 
 requestAnimationFrame(WARLOCK_GAME_ANIMATION);  // 自动刷新画面
-class FireBall extends WarlockGameObject {
+class MultiPlayerSocket {
+    constructor(playground) {
+        this.playground = playground;
+
+        this.ws = new WebSocket("wss://app1186.acapp.acwing.com.cn/wss/multiplayer/");
+
+        this.start();
+    }
+
+    start() {
+
+    }
+
+    send_create_player() {
+        this.ws.send(JSON.stringify({
+            'message': "hello warlock server",
+        }));
+    }
+
+    receive_create_player() {
+
+    }
+}class FireBall extends WarlockGameObject {
     constructor(playground, player, x, y, vx, vy, radius, color, speed, move_length, damage) {
         super();
         this.playground = playground;

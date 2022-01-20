@@ -37,6 +37,7 @@ class WarlockGamePlayground {
     }
 
     show(mode) {  // 打开playground界面
+        let outer = this;
         this.$playground.show();
         // 打开playground界面后再初始化幕布大小
         this.width = this.$playground.width();
@@ -54,9 +55,12 @@ class WarlockGamePlayground {
             }
         }
         else if (mode === "multi mode") {
+            this.mps = new MultiPlayerSocket(this);
 
+            this.mps.ws.onopen = function() {
+                outer.mps.send_create_player();
+            }
         }
-        
     }
 
     hide() {  // 关闭playground界面
