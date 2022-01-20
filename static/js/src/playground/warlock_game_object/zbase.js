@@ -5,6 +5,18 @@ class WarlockGameObject {
         WARLOCK_GAME_OBJECTS.push(this);
         this.has_called_start = false;  // 记录元素是否执行过start函数
         this.timedelta = 0;  // 当前帧距离上一帧的时间间隔(ms)
+        this.uuid = this.create_uuid();
+
+        console.log(this.uuid);
+    }
+
+    create_uuid() {  // 给每个object创建一个唯一编号
+        let res = "";
+        for (let i = 0; i < 8; i ++) {
+            let x = parseInt(Math.floor(Math.random() * 10));
+            res += x;
+        }
+        return res;
     }
 
     start() {  // 仅在第一帧执行一次

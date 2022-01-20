@@ -362,9 +362,10 @@ class Settings {
         }
         else if (mode === "multi mode") {
             this.mps = new MultiPlayerSocket(this);
+            this.mps.uuid = this.players[0].uuid;
 
             this.mps.ws.onopen = function() {
-                outer.mps.send_create_player();
+                outer.mps.send_create_player(outer.root.settings.username, outer.root.settings.photo);
             }
         }
     }
@@ -380,6 +381,18 @@ class WarlockGameObject {
         WARLOCK_GAME_OBJECTS.push(this);
         this.has_called_start = false;  // 记录元素是否执行过start函数
         this.timedelta = 0;  // 当前帧距离上一帧的时间间隔(ms)
+        this.uuid = this.create_uuid();
+
+        console.log(this.uuid);
+    }
+
+    create_uuid() {  // 给每个object创建一个唯一编号
+        let res = "";
+        for (let i = 0; i < 8; i ++) {
+            let x = parseInt(Math.floor(Math.random() * 10));
+            res += x;
+        }
+        return res;
     }
 
     start() {  // 仅在第一帧执行一次
@@ -435,17 +448,48 @@ class MultiPlayerSocket {
     }
 
     start() {
-
+        this.receive();
     }
 
-    send_create_player() {
+    receive() {  // 前端接收信息
+        let outer = this;
+        this.ws.onmessage = function(e) {
+            let data = JSON.parse(e.data);
+            let uuid = data.uuid;
+            if (uuid === outer.uuid) return false;
+
+            let event = data.event;
+            if (event === "create_player") {
+                outer.receive_create_player(uuid, data.username, data.photo);
+            }
+        }
+    }
+
+    send_create_player(username, photo) {
+        let outer = this;
         this.ws.send(JSON.stringify({
-            'message': "hello warlock server",
+            'event': "create_player",
+            'uuid': outer.uuid,
+            'username': username,
+            'photo': photo,
         }));
     }
 
-    receive_create_player() {
+    receive_create_player(uuid, username, photo) {
+        let player = new Player(
+            this.playground,
+            this.playground.width / 2 / this.playground.scale,
+            0.5,
+            0.05,
+            "black",
+            0.15,
+            "enemy",
+            username,
+            photo,
+        );
 
+        player.uuid = uuid;
+        this.playground.player.push(player);
     }
 }class FireBall extends WarlockGameObject {
     constructor(playground, player, x, y, vx, vy, radius, color, speed, move_length, damage) {
@@ -520,6 +564,9 @@ class MultiPlayerSocket {
     }
 }class Player extends WarlockGameObject {
     constructor(playground, x, y, radius, color, speed, character, username, photo) {
+
+        console.log(character, username, photo);
+
         super();
         this.playground = playground;
         this.ctx = this.playground.game_map.ctx;
@@ -553,7 +600,7 @@ class MultiPlayerSocket {
         if (this.character === "me") {
             this.add_listening_events();
         }
-        else {  // ai随机移动
+        else if (this.character === "robot") {  // ai随机移动
             let rx = Math.random() * this.playground.width / this.playground.scale;
             let ry = Math.random() * this.playground.height / this.playground.scale;
             this.move_to(rx, ry);
@@ -654,7 +701,7 @@ class MultiPlayerSocket {
             let player = this.playground.players[0];
             let targetx = player.x + player.speed * player.vx * this.timedelta / 1000 * 0.3;
             let targety = player.y + player.speed * player.vy * this.timedelta / 1000 * 0.3;
-            if (player.radius > 10) {
+            if (player.character === "me") {
                 this.shoot_fireball(targetx, targety);
             }
         }

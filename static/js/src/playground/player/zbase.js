@@ -1,5 +1,8 @@
 class Player extends WarlockGameObject {
     constructor(playground, x, y, radius, color, speed, character, username, photo) {
+
+        console.log(character, username, photo);
+
         super();
         this.playground = playground;
         this.ctx = this.playground.game_map.ctx;
@@ -33,7 +36,7 @@ class Player extends WarlockGameObject {
         if (this.character === "me") {
             this.add_listening_events();
         }
-        else {  // ai随机移动
+        else if (this.character === "robot") {  // ai随机移动
             let rx = Math.random() * this.playground.width / this.playground.scale;
             let ry = Math.random() * this.playground.height / this.playground.scale;
             this.move_to(rx, ry);
@@ -134,7 +137,7 @@ class Player extends WarlockGameObject {
             let player = this.playground.players[0];
             let targetx = player.x + player.speed * player.vx * this.timedelta / 1000 * 0.3;
             let targety = player.y + player.speed * player.vy * this.timedelta / 1000 * 0.3;
-            if (player.radius > 10) {
+            if (player.character === "me") {
                 this.shoot_fireball(targetx, targety);
             }
         }
