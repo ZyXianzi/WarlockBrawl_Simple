@@ -46,6 +46,9 @@ class WarlockGamePlayground {
         // 打开地图后再初始化地图大小
 
         this.mode = mode;
+        this.state = "waiting";  // waiting -> fighting -> over 状态机
+        this.notice_board = new NoticeBoard(this);
+        this.player_count = 0;
 
         this.resize();
 

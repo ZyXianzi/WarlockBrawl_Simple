@@ -17,7 +17,7 @@ class Player extends WarlockGameObject {
         this.character = character;  // 判断player类型
         this.username = username;  // 用户名
         this.photo = photo;  // 头像
-        this.eps = 0.01;  // 坐标精度
+        this.eps = 0.009;  // 坐标精度
         this.friction = 0.9;  // 摩擦力
         this.spent_time = 0;  // 记录游戏时间
         this.fireballs = [];
@@ -28,9 +28,27 @@ class Player extends WarlockGameObject {
             this.img = new Image(); // canvas用图片填充圆形
             this.img.src = this.photo;
         }
+
+        if (this.character === "me") {
+            this.fireball_coldtime = 3;  // 火球cd 单位秒
+            this.fireball_image = new Image();
+            this.fireball_image.src = "https://cdn.acwing.com/media/article/image/2021/12/02/1_9340c86053-fireball.png";
+
+            this.blink_coldtime = 5;
+            this.blink_image = new Image();
+            this.blink_image.src = "https://cdn.acwing.com/media/article/image/2021/12/02/1_daccabdc53-blink.png"
+        }
     }
 
     start() {
+        this.playground.player_count ++;
+        this.playground.notice_board.write("已就绪" + this.playground.player_count + "人");
+
+        if (this.playground.player_count >= 3) {
+            this.playground.state = "fighting";
+            this.playground.notice_board.write("Fighting");
+        }
+
         if (this.character === "me") {
             this.add_listening_events();
         }
@@ -49,6 +67,10 @@ class Player extends WarlockGameObject {
         });
 
         this.playground.game_map.$canvas.mousedown(function(e) {
+            if (outer.playground.state !== "fighting") {  // 只有fighting阶段能操作
+                return false;
+            }
+
             const rect = outer.ctx.canvas.getBoundingClientRect();  // 记录画布与屏幕的相对位置
             if (e.which === 3) {  // 按下鼠标右键移动
                 let tx = (e.clientX - rect.left) / outer.playground.scale;
@@ -59,14 +81,27 @@ class Player extends WarlockGameObject {
                     outer.playground.mps.send_move_to(tx, ty);
                 }
             }
-            else if (e.which === 1) {  // 按下鼠标左键发射技能
+            else if (e.which === 1) {  // 按下鼠标左键使用技能
                 let tx = (e.clientX - rect.left) / outer.playground.scale;
                 let ty = (e.clientY - rect.top) / outer.playground.scale;
                 if (outer.cur_skill === "fireball") {
+                    if (outer.fireball_coldtime > outer.eps) {
+                        return false;
+                    }
                     let fireball = outer.shoot_fireball(tx, ty);
 
                     if (outer.playground.mode === "multi mode") {
                         outer.playground.mps.send_shoot_fireball(tx, ty, fireball.uuid);
+                    }
+                }
+                else if (outer.cur_skill === "blink") {
+                    if (outer.blink_coldtime > outer.eps) {
+                        return false;
+                    }
+                    outer.blink(tx, ty);
+
+                    if (outer.playground.mode === "multi mode") {
+                        outer.playground.mps.send_blink(tx, ty);
                     }
                 }
                 outer.cur_skill = null;  // 发射完取消技能握持
@@ -74,8 +109,16 @@ class Player extends WarlockGameObject {
         });
 
         $(window).keydown(function(e) {
-            if (outer.spent_time > 3 && e.which === 81) {  // 按下q键握持火球
+            if (outer.playground.state !== "fighting") {  // 只有fighting阶段能操作
+                return true;  // 避免截取游戏之外的操作
+            }
+
+            if (e.which === 81) {  // 按下q键握持火球
                 outer.cur_skill = "fireball";
+                return false;
+            }
+            else if (e.which === 70) {
+                outer.cur_skill = "blink";
                 return false;
             }
         });
@@ -93,7 +136,20 @@ class Player extends WarlockGameObject {
         let fireball = new FireBall(this.playground, this, x, y, vx, vy, radius, color, speed, move_length, 0.01);
         this.fireballs.push(fireball);
 
+        this.fireball_coldtime = 3;
+
         return fireball;  // 为了获取火球的uuid
+    }
+
+    blink(tx, ty) {
+        let d = this.get_dist(this.x, this.y, tx, ty);
+        d = Math.min(d, 0.5);
+        let angle = Math.atan2(ty - this.y, tx - this.x)
+        this.x += d * Math.cos(angle);
+        this.y += d * Math.sin(angle);
+
+        this.blink_coldtime = 5;
+        this.move_length = 0;  // 闪现完停下来
     }
 
     destroy_fireball(uuid) {
@@ -155,13 +211,23 @@ class Player extends WarlockGameObject {
     }
 
     update() {
+        this.spent_time += this.timedelta / 1000;  // 记录时间
+
+        if (this.character === "me" && this.playground.state === "fighting") {
+            this.update_coldtime();
+        }
         this.update_move();
         this.render();
     }
 
-    update_move() {
-        this.spent_time += this.timedelta / 1000;  // 记录时间
+    update_coldtime() {
+        this.fireball_coldtime -= this.timedelta / 1000;
+        this.fireball_coldtime = Math.max(this.fireball_coldtime, 0);
+        this.blink_coldtime -= this.timedelta / 1000;
+        this.blink_coldtime = Math.max(this.blink_coldtime, 0);
+    }
 
+    update_move() {
         // ai射击玩家
         if (this.character === "robot" && this.spent_time > 3 && Math.random() < 1 / 300.0) {
             let player = this.playground.players[0];
@@ -200,7 +266,7 @@ class Player extends WarlockGameObject {
     }
 
     render() {
-        let scale = this.playground.scale
+        let scale = this.playground.scale;
         if (this.character !== "robot") {  // canvas用图片填充圆形
             this.ctx.save();
             this.ctx.beginPath();
@@ -216,9 +282,60 @@ class Player extends WarlockGameObject {
             this.ctx.fillStyle = this.color;
             this.ctx.fill();
         }
+
+        if (this.character === "me" && this.playground.state === "fighting") {
+            this.render_skill_coldtime();
+        }
+    }
+
+    render_skill_coldtime() {
+        let scale = this.playground.scale;
+        let x = 1.5, y = 0.9, r = 0.04;
+
+        // 绘制火球技能图标
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);
+        this.ctx.stroke();
+        this.ctx.clip();
+        this.ctx.drawImage(this.fireball_image, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
+        this.ctx.restore();
+
+        // 绘制冷却动画
+        if (this.fireball_coldtime > 0) {  
+            this.ctx.beginPath();  // 蒙版
+            this.ctx.moveTo(x * scale, y * scale);
+            this.ctx.arc(x * scale, y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.fireball_coldtime / 3) - Math.PI / 2, true);  // 生成圆形
+            this.ctx.lineTo(x * scale, y * scale);
+            this.ctx.fillStyle = "rgba(34, 34, 34, 0.8)";
+            this.ctx.fill();
+        }
+
+        // 绘制闪现技能图标
+        x = 1.62, y = 0.9, r = 0.04;
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);
+        this.ctx.stroke();
+        this.ctx.clip();
+        this.ctx.drawImage(this.blink_image, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
+        this.ctx.restore();
+
+         // 绘制冷却动画
+        if (this.blink_coldtime > 0) {
+            this.ctx.beginPath();  // 蒙版
+            this.ctx.moveTo(x * scale, y * scale);
+            this.ctx.arc(x * scale, y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.blink_coldtime / 5) - Math.PI / 2, true);  // 生成圆形
+            this.ctx.lineTo(x * scale, y * scale);
+            this.ctx.fillStyle = "rgba(34, 34, 34, 0.8)";
+            this.ctx.fill();
+        }
     }
 
     on_destroy() {
+        if (this.character === "me") {
+            this.playground.state = "over";  // 避免死了之后放技能
+        }
         for (let i = 0; i < this.playground.players.length; i++) {
             if (this.playground.players[i] === this) {
                 this.playground.players.splice(i, 1);
