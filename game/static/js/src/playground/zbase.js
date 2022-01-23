@@ -44,6 +44,9 @@ class WarlockGamePlayground {
         this.height = this.$playground.height();
         this.game_map = new GameMap(this);
         // 打开地图后再初始化地图大小
+
+        this.mode = mode;
+
         this.resize();
 
         this.players = [];

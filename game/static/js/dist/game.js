@@ -226,17 +226,20 @@ class Settings {
     }
 
     logout_on_remote() {  // 在远程服务器上登出
-        if (this.platform === "ACAPP") return false;  // 仅在web端执行
-
-        $.ajax({
-            url: "https://app1186.acapp.acwing.com.cn/settings/logout/",
-            type: "GET",
-            success: function(resp) {
-                if (resp.result === "success") {
-                    location.reload();
+        if (this.platform === "ACAPP") {
+            this.root.AcWingOS.api.window.close();
+        }
+        else {
+            $.ajax({
+                url: "https://app1186.acapp.acwing.com.cn/settings/logout/",
+                type: "GET",
+                success: function (resp) {
+                    if (resp.result === "success") {
+                        location.reload();
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     register() {  // 打开注册界面
@@ -350,6 +353,9 @@ class Settings {
         this.height = this.$playground.height();
         this.game_map = new GameMap(this);
         // 打开地图后再初始化地图大小
+
+        this.mode = mode;
+
         this.resize();
 
         this.players = [];
@@ -382,8 +388,6 @@ class WarlockGameObject {
         this.has_called_start = false;  // 记录元素是否执行过start函数
         this.timedelta = 0;  // 当前帧距离上一帧的时间间隔(ms)
         this.uuid = this.create_uuid();
-
-        console.log(this.uuid);
     }
 
     create_uuid() {  // 给每个object创建一个唯一编号
@@ -462,6 +466,15 @@ class MultiPlayerSocket {
             if (event === "create_player") {
                 outer.receive_create_player(uuid, data.username, data.photo);
             }
+            else if (event === "move_to") {
+                outer.receive_move_to(uuid, data.tx, data.ty);
+            }
+            else if (event === "shoot_fireball") {
+                outer.receive_shoot_fireball(uuid, data.tx, data.ty, data.ball_uuid);
+            }
+            else if (event === "attack") {
+                outer.receive_attack(uuid, data.attackee_uuid, data.x, data.y, data.angle, data.damage, data.ball_uuid);
+            }
         }
     }
 
@@ -475,13 +488,24 @@ class MultiPlayerSocket {
         }));
     }
 
+    get_player(uuid) {
+        let players = this.playground.players;
+        for (let i = 0; i < players.length; i ++) {
+            let player = players[i];
+            if (player.uuid === uuid) {
+                return player;
+            }
+        }
+        return null;
+    }
+
     receive_create_player(uuid, username, photo) {
         let player = new Player(
             this.playground,
             this.playground.width / 2 / this.playground.scale,
             0.5,
             0.05,
-            "black",
+            "white",
             0.15,
             "enemy",
             username,
@@ -489,7 +513,66 @@ class MultiPlayerSocket {
         );
 
         player.uuid = uuid;
-        this.playground.player.push(player);
+        this.playground.players.push(player);
+    }
+
+    send_move_to(tx, ty) {
+        let outer = this;
+        this.ws.send(JSON.stringify({
+            'event': "move_to",
+            'uuid': outer.uuid,
+            'tx': tx,
+            'ty': ty,
+        }));
+    }
+
+    receive_move_to(uuid, tx, ty) {
+        let player = this.get_player(uuid);
+
+        if (player) {
+            player.move_to(tx, ty);
+        }
+    }
+
+    send_shoot_fireball(tx, ty, ball_uuid) {
+        let outer = this;
+        this.ws.send(JSON.stringify({
+            'event': "shoot_fireball",
+            'uuid': outer.uuid,
+            'tx': tx,
+            'ty': ty,
+            'ball_uuid': ball_uuid,
+        }));
+    }
+
+    receive_shoot_fireball(uuid, tx, ty, ball_uuid) {
+        let player = this.get_player(uuid);
+        if (player) {
+            let fireball = player.shoot_fireball(tx, ty);
+            fireball.uuid = ball_uuid;
+        }
+    }
+
+    send_attack(attackee_uuid, x, y, angle, damage, ball_uuid) {
+        let outer = this;
+        this.ws.send(JSON.stringify({
+            'event': "attack",
+            'uuid': outer.uuid,
+            'attackee_uuid': attackee_uuid,
+            'x': x,
+            'y': y,
+            'angle': angle,
+            'damage': damage,
+            'ball_uuid': ball_uuid,
+        }));
+    }
+
+    receive_attack(uuid, attackee_uuid, x, y, angle, damage, ball_uuid) {
+        let attacker = this.get_player(uuid);
+        let attackee = this.get_player(attackee_uuid);
+        if (attacker && attackee) {
+            attackee.receive_attack(x, y, angle, damage, ball_uuid, attacker);
+        }
     }
 }class FireBall extends WarlockGameObject {
     constructor(playground, player, x, y, vx, vy, radius, color, speed, move_length, damage) {
@@ -519,18 +602,30 @@ class MultiPlayerSocket {
             return false;
         }
 
+        this.update_move();
+
+        if (this.player.character !== "enemy") {
+            this.update_attack();
+        }
+
+        this.render();
+    }
+
+    update_move() {
         let moved = Math.min(this.move_length, this.speed * this.timedelta / 1000);
         this.x += this.vx * moved;
         this.y += this.vy * moved;
         this.move_length -= moved;
+    }
 
-        for (let i = 0; i < this.playground.players.length; i ++) {
+    update_attack() {
+        for (let i = 0; i < this.playground.players.length; i++) {
             let player = this.playground.players[i];
             if (this.player !== player && this.is_collision(player)) {
                 this.attack(player);
+                break;
             }
         }
-        this.render();
     }
 
     get_dist(x1, y1, x2, y2) {
@@ -552,6 +647,11 @@ class MultiPlayerSocket {
     attack(player) {
         let angle = Math.atan2(player.y - this.y, player.x - this.x);  // 记录攻击角度
         player.is_attacked(angle, this.damage);
+
+        if (this.playground.mode === "multi mode") {
+            this.playground.mps.send_attack(player.uuid, player.x, player.y, angle, this.damage, this.uuid);
+        }
+
         this.destroy();
     }
 
@@ -562,11 +662,18 @@ class MultiPlayerSocket {
         this.ctx.fillStyle = this.color;
         this.ctx.fill();
     }
+
+    on_destroy() {
+        let fireballs = this.player.fireballs;
+        for (let i = 0; i < fireballs.length; i ++) {
+            if (fireballs[i] === this) {
+                fireballs.splice(i, 1);
+                break;
+            }
+        }
+    }
 }class Player extends WarlockGameObject {
     constructor(playground, x, y, radius, color, speed, character, username, photo) {
-
-        console.log(character, username, photo);
-
         super();
         this.playground = playground;
         this.ctx = this.playground.game_map.ctx;
@@ -587,6 +694,7 @@ class MultiPlayerSocket {
         this.eps = 0.01;  // 坐标精度
         this.friction = 0.9;  // 摩擦力
         this.spent_time = 0;  // 记录游戏时间
+        this.fireballs = [];
 
         this.cur_skill = null;  // 记录当前是否握持有技能
 
@@ -617,11 +725,23 @@ class MultiPlayerSocket {
         this.playground.game_map.$canvas.mousedown(function(e) {
             const rect = outer.ctx.canvas.getBoundingClientRect();  // 记录画布与屏幕的相对位置
             if (e.which === 3) {  // 按下鼠标右键移动
-                outer.move_to((e.clientX - rect.left) / outer.playground.scale, (e.clientY - rect.top) / outer.playground.scale);
+                let tx = (e.clientX - rect.left) / outer.playground.scale;
+                let ty = (e.clientY - rect.top) / outer.playground.scale;
+                outer.move_to(tx, ty);
+
+                if (outer.playground.mode === "multi mode") {
+                    outer.playground.mps.send_move_to(tx, ty);
+                }
             }
             else if (e.which === 1) {  // 按下鼠标左键发射技能
+                let tx = (e.clientX - rect.left) / outer.playground.scale;
+                let ty = (e.clientY - rect.top) / outer.playground.scale;
                 if (outer.cur_skill === "fireball") {
-                    outer.shoot_fireball((e.clientX - rect.left) / outer.playground.scale, (e.clientY - rect.top) / outer.playground.scale)
+                    let fireball = outer.shoot_fireball(tx, ty);
+
+                    if (outer.playground.mode === "multi mode") {
+                        outer.playground.mps.send_shoot_fireball(tx, ty, fireball.uuid);
+                    }
                 }
                 outer.cur_skill = null;  // 发射完取消技能握持
             }
@@ -644,7 +764,20 @@ class MultiPlayerSocket {
         let color = "orange";
         let speed = 0.5;
         let move_length = 1;
-        new FireBall(this.playground, this, x, y, vx, vy, radius, color, speed, move_length, 0.01);
+        let fireball = new FireBall(this.playground, this, x, y, vx, vy, radius, color, speed, move_length, 0.01);
+        this.fireballs.push(fireball);
+
+        return fireball;  // 为了获取火球的uuid
+    }
+
+    destroy_fireball(uuid) {
+        for (let i = 0; i < this.fireballs.length; i ++) {
+            let fireball = this.fireballs[i];
+            if (fireball.uuid === uuid) {
+                fireball.destroy();
+                break;
+            }
+        }
     }
 
     // 获取当前位置与目标位置间的距离
@@ -686,6 +819,13 @@ class MultiPlayerSocket {
         this.damage_y = Math.sin(angle);
         this.damage_speed = damage * 200;
         this.speed *= 1.2;
+    }
+
+    receive_attack(x, y, angle, damage, ball_uuid, attacker) {
+        attacker.destroy_fireball(ball_uuid);
+        this.x = x;
+        this.y = y;
+        this.is_attacked(angle, damage);
     }
 
     update() {
@@ -756,6 +896,7 @@ class MultiPlayerSocket {
         for (let i = 0; i < this.playground.players.length; i++) {
             if (this.playground.players[i] === this) {
                 this.playground.players.splice(i, 1);
+                break;
             }
         }
     }
@@ -848,7 +989,7 @@ class WarlockGameMenu {
         </div>
         <br>
         <div class="warlock_game_menu_field_item warlock_game_menu_field_item_settings">
-            退出登录
+            退出
         </div>
     </div>
 </div>
@@ -877,7 +1018,6 @@ class WarlockGameMenu {
             outer.root.playground.show("multi mode");
         });
         this.$settings.click(function () {
-            console.log("click settings");
             outer.root.settings.logout_on_remote();
         });
     }

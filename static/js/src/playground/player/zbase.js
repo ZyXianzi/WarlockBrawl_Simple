@@ -1,8 +1,5 @@
 class Player extends WarlockGameObject {
     constructor(playground, x, y, radius, color, speed, character, username, photo) {
-
-        console.log(character, username, photo);
-
         super();
         this.playground = playground;
         this.ctx = this.playground.game_map.ctx;
@@ -23,6 +20,7 @@ class Player extends WarlockGameObject {
         this.eps = 0.01;  // 坐标精度
         this.friction = 0.9;  // 摩擦力
         this.spent_time = 0;  // 记录游戏时间
+        this.fireballs = [];
 
         this.cur_skill = null;  // 记录当前是否握持有技能
 
@@ -53,11 +51,23 @@ class Player extends WarlockGameObject {
         this.playground.game_map.$canvas.mousedown(function(e) {
             const rect = outer.ctx.canvas.getBoundingClientRect();  // 记录画布与屏幕的相对位置
             if (e.which === 3) {  // 按下鼠标右键移动
-                outer.move_to((e.clientX - rect.left) / outer.playground.scale, (e.clientY - rect.top) / outer.playground.scale);
+                let tx = (e.clientX - rect.left) / outer.playground.scale;
+                let ty = (e.clientY - rect.top) / outer.playground.scale;
+                outer.move_to(tx, ty);
+
+                if (outer.playground.mode === "multi mode") {
+                    outer.playground.mps.send_move_to(tx, ty);
+                }
             }
             else if (e.which === 1) {  // 按下鼠标左键发射技能
+                let tx = (e.clientX - rect.left) / outer.playground.scale;
+                let ty = (e.clientY - rect.top) / outer.playground.scale;
                 if (outer.cur_skill === "fireball") {
-                    outer.shoot_fireball((e.clientX - rect.left) / outer.playground.scale, (e.clientY - rect.top) / outer.playground.scale)
+                    let fireball = outer.shoot_fireball(tx, ty);
+
+                    if (outer.playground.mode === "multi mode") {
+                        outer.playground.mps.send_shoot_fireball(tx, ty, fireball.uuid);
+                    }
                 }
                 outer.cur_skill = null;  // 发射完取消技能握持
             }
@@ -80,7 +90,20 @@ class Player extends WarlockGameObject {
         let color = "orange";
         let speed = 0.5;
         let move_length = 1;
-        new FireBall(this.playground, this, x, y, vx, vy, radius, color, speed, move_length, 0.01);
+        let fireball = new FireBall(this.playground, this, x, y, vx, vy, radius, color, speed, move_length, 0.01);
+        this.fireballs.push(fireball);
+
+        return fireball;  // 为了获取火球的uuid
+    }
+
+    destroy_fireball(uuid) {
+        for (let i = 0; i < this.fireballs.length; i ++) {
+            let fireball = this.fireballs[i];
+            if (fireball.uuid === uuid) {
+                fireball.destroy();
+                break;
+            }
+        }
     }
 
     // 获取当前位置与目标位置间的距离
@@ -122,6 +145,13 @@ class Player extends WarlockGameObject {
         this.damage_y = Math.sin(angle);
         this.damage_speed = damage * 200;
         this.speed *= 1.2;
+    }
+
+    receive_attack(x, y, angle, damage, ball_uuid, attacker) {
+        attacker.destroy_fireball(ball_uuid);
+        this.x = x;
+        this.y = y;
+        this.is_attacked(angle, damage);
     }
 
     update() {
@@ -192,6 +222,7 @@ class Player extends WarlockGameObject {
         for (let i = 0; i < this.playground.players.length; i++) {
             if (this.playground.players[i] === this) {
                 this.playground.players.splice(i, 1);
+                break;
             }
         }
     }

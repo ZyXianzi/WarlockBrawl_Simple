@@ -1,0 +1,228 @@
+Script started on 2022-01-20 19:59:33+08:00 [TERM="screen" TTY="/dev/pts/9" COLUMNS="104" LINES="26"]
+zyxianzi@232494a8fa90:~/Warlock$ cd scripts/
+zyxianzi@232494a8fa90:~/Warlock/scripts$ ls
+[0m[01;32mcompress_game_js.sh[0m  uwsgi.ini
+zyxianzi@232494a8fa90:~/Warlock/scripts$ c[K./compress_game_js.sh 
+python3: can't open file 'manage.py': [Errno 2] No such file or directory
+zyxianzi@232494a8fa90:~/Warlock/scripts$ cd ../
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+3 static files copied to '/home/zyxianzi/Warlock/static', 139 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+1 static file copied to '/home/zyxianzi/Warlock/static', 141 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+1 static file copied to '/home/zyxianzi/Warlock/static', 141 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+3 static files copied to '/home/zyxianzi/Warlock/static', 139 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+1 static file copied to '/home/zyxianzi/Warlock/static', 141 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+2 static files copied to '/home/zyxianzi/Warlock/static', 140 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+2 static files copied to '/home/zyxianzi/Warlock/static', 140 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+2 static files copied to '/home/zyxianzi/Warlock/static', 140 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ [Kzyxianzi@232494a8fa90:~/Warlock$ cd game/static/js/src/
+zyxianzi@232494a8fa90:~/Warlock/game/static/js/src$ ag cons ole.log
+[1;32mmenu/zbase.js[0m[K
+[1;33m45[0m[K:            [30;43mconsole.log[0m[K("click settings");
+
+[1;32mplayground/player/zbase.js[0m[K
+[1;33m4[0m[K:        [30;43mconsole.log[0m[K(character, username, photo);
+
+[1;32mplayground/warlock_game_object/zbase.js[0m[K
+[1;33m10[0m[K:        [30;43mconsole.log[0m[K(this.uuid);
+zyxianzi@232494a8fa90:~/Warlock/game/static/js/src$ ag console.log
+zyxianzi@232494a8fa90:~/Warlock/game/static/js/src$ cd ../. ./../
+zyxianzi@232494a8fa90:~/Warlock/game$ cd ../
+zyxianzi@232494a8fa90:~/Warlock$ cd ../../../ag console.logcd game/static/js/src/scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+5 static files copied to '/home/zyxianzi/Warlock/static', 137 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+5 static files copied to '/home/zyxianzi/Warlock/static', 137 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+2 static files copied to '/home/zyxianzi/Warlock/static', 140 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+2 static files copied to '/home/zyxianzi/Warlock/static', 140 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+2 static files copied to '/home/zyxianzi/Warlock/static', 140 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+4 static files copied to '/home/zyxianzi/Warlock/static', 138 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+2 static files copied to '/home/zyxianzi/Warlock/static', 140 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+2 static files copied to '/home/zyxianzi/Warlock/static', 140 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+location as specified in your settings:
+
+    /home/zyxianzi/Warlock/static
+
+This will overwrite existing files!
+Are you sure you want to do this?
+
+Type 'yes' to continue, or 'no' to cancel: 
+1 static file copied to '/home/zyxianzi/Warlock/static', 141 unmodified.
+zyxianzi@232494a8fa90:~/Warlock$ scripts/compress_game_js.sh 
+
+You have requested to collect static files at the destination
+loca

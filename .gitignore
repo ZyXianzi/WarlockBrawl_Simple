@@ -1,2 +1,6 @@
 **/__pycache__
 *.swap
+typescript
+.gitigore
+static/
+game/static/js/dist/
