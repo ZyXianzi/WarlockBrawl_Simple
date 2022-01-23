@@ -65,10 +65,9 @@ class Player extends WarlockGameObject {
         this.playground.game_map.$canvas.on("contextmenu", function() {
             return false;  // 屏蔽网页右键菜单
         });
-
         this.playground.game_map.$canvas.mousedown(function(e) {
             if (outer.playground.state !== "fighting") {  // 只有fighting阶段能操作
-                return false;
+                return true;
             }
 
             const rect = outer.ctx.canvas.getBoundingClientRect();  // 记录画布与屏幕的相对位置
@@ -108,7 +107,20 @@ class Player extends WarlockGameObject {
             }
         });
 
-        $(window).keydown(function(e) {
+        this.playground.game_map.$canvas.keydown(function(e) {
+            if (e.which === 13) {  // 按下回车键打开聊天框
+                if (outer.playground.mode === "multi mode") {
+                    outer.playground.chat_field.show_input();
+                    return false;
+                }
+            }
+            else if (e.which === 27) {  // 按下esc关闭聊天框
+                if (outer.playground.mode === "multi mode") {
+                    outer.playground.chat_field.hide_input();
+                    return false;
+                }
+            }
+
             if (outer.playground.state !== "fighting") {  // 只有fighting阶段能操作
                 return true;  // 避免截取游戏之外的操作
             }
@@ -117,7 +129,7 @@ class Player extends WarlockGameObject {
                 outer.cur_skill = "fireball";
                 return false;
             }
-            else if (e.which === 70) {
+            else if (e.which === 70) {  // 按下f键握持闪现
                 outer.cur_skill = "blink";
                 return false;
             }
