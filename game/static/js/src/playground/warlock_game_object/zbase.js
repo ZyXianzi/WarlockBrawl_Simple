@@ -25,6 +25,10 @@ class WarlockGameObject {
 
     }
 
+    late_update() {  // 在每一帧的最后执行一次
+
+    }
+
     on_destroy() {  // 在被删除前执行一次
 
     }
@@ -54,6 +58,12 @@ let WARLOCK_GAME_ANIMATION = function(timestamp) {
             obj.update();
         }
     }
+
+    for (let i = 0; i < WARLOCK_GAME_OBJECTS.length; i ++) {
+        let obj = WARLOCK_GAME_OBJECTS[i];
+        obj.late_update();
+    }
+
     last_timestamp = timestamp;
 
     requestAnimationFrame(WARLOCK_GAME_ANIMATION);

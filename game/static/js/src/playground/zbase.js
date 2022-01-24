@@ -18,11 +18,27 @@ class WarlockGamePlayground {
         return colors[Math.floor(Math.random() * 15)];
     }
 
+    create_uuid() {  // 给每个resize函数创建一个唯一编号
+        let res = "";
+        for (let i = 0; i < 8; i++) {
+            let x = parseInt(Math.floor(Math.random() * 10));
+            res += x;
+        }
+        return res;
+    }
+
     start() {
         let outer = this;
-        $(window).resize(function() {  // 用户改变窗口大小时触发
+        let uuid = this.create_uuid();
+        $(window).on(`resize.$(uuid)`, function() {  // 用户改变窗口大小时触发
             outer.resize();
         });
+
+        if (this.root.AcWingOS) {
+            this.root.AcWingOS.api.window.on_close(function() {
+                $(window).off(`resize.$(uuid)`);
+            });
+        }
     }
 
     resize() {  // 渲染地图为16：9
@@ -48,6 +64,7 @@ class WarlockGamePlayground {
         this.mode = mode;
         this.state = "waiting";  // waiting -> fighting -> over 状态机
         this.notice_board = new NoticeBoard(this);
+        this.score_board = new ScoreBoard(this);
         this.player_count = 0;
 
         this.resize();
@@ -71,7 +88,28 @@ class WarlockGamePlayground {
         }
     }
 
-    hide() {  // 关闭playground界面
+    hide() {  // 关闭playground界面时删除内部元素
+        while (this.players && this.players.length > 0) {  // 用for循环有bug
+            this.players[0].destroy();
+        }
+        // 不能直接清空WARLOCK_GAME_OBJECTS因为acapp端不同窗口共用全局变量
+        if (this.game_map) {
+            this.game_map.destroy();
+            this.game_map = null;
+        }
+
+        if (this.notice_board) {
+            this.notice_board.destroy();
+            this.notice_board = null;
+        }
+
+        if (this.score_board) {
+            this.score_board.destroy();
+            this.score_board = null;
+        }
+
+        this.$playground.empty();  // 清空html
+
         this.$playground.hide();
     }
 }
