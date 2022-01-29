@@ -1,8 +1,45 @@
-class Player extends WarlockGameObject {
-    constructor(playground, x, y, radius, color, speed, character, username, photo) {
+import { WarlockGamePlayground } from "../zbase";
+import { FireBall } from "../skill/fireball/zbase";
+import { Particle } from "../particle/zbase";
+import { NoticeBoard } from "../notice_board/zbase";
+import { ChatField } from "../chat_field/zbase";
+import { ScoreBoard } from "../score_board/zbase";
+import { MultiPlayerSocket } from "../socket/multiplayer/zbase";
+import { GameMap } from "../game_map/zbase";
+
+export class Player extends WarlockGameObject {
+    playground: WarlockGamePlayground;
+    ctx: CanvasRenderingContext2D;
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    damage_x: number;
+    damage_y: number;
+    damage_speed: number;
+    move_length: number;
+    radius: number;
+    color: string;
+    speed: number;
+    character: string;
+    username: string | undefined;
+    photo: string | undefined;
+    eps: number;
+    friction: number;
+    spent_time: number;
+    fireballs: FireBall[];
+    cur_skill: string
+    img?: HTMLImageElement;
+    fireball_coldtime: number = 3;
+    fireball_image?: HTMLImageElement;
+    blink_coldtime: number = 5;
+    blink_image?: HTMLImageElement;
+
+
+    constructor(playground: WarlockGamePlayground, x: number, y: number, radius: number, color: string, speed: number, character: string, username?: string, photo?: string) {
         super();
         this.playground = playground;
-        this.ctx = this.playground.game_map.ctx;
+        this.ctx = (<GameMap>this.playground.game_map).ctx;
         this.x = x;  // 当前坐标
         this.y = y;
         this.vx = 0;  // 当前移动方向
@@ -22,11 +59,11 @@ class Player extends WarlockGameObject {
         this.spent_time = 0;  // 记录游戏时间
         this.fireballs = [];
 
-        this.cur_skill = null;  // 记录当前是否握持有技能
+        this.cur_skill = "";  // 记录当前是否握持有技能
 
         if (this.character !== "robot") {
             this.img = new Image(); // canvas用图片填充圆形
-            this.img.src = this.photo;
+            this.img.src = <string>this.photo;
         }
 
         if (this.character === "me") {
@@ -42,11 +79,11 @@ class Player extends WarlockGameObject {
 
     start() {
         this.playground.player_count ++;
-        this.playground.notice_board.write("已就绪" + this.playground.player_count + "人");
+        (<NoticeBoard>this.playground.notice_board).write("已就绪" + this.playground.player_count + "人");
 
         if (this.playground.player_count >= 3) {
             this.playground.state = "fighting";
-            this.playground.notice_board.write("Fighting");
+            (<NoticeBoard>this.playground.notice_board).write("Fighting");
         }
 
         if (this.character === "me") {
@@ -62,10 +99,12 @@ class Player extends WarlockGameObject {
     // 全局监听函数
     add_listening_events() {
         let outer = this;
-        this.playground.game_map.$canvas.on("contextmenu", function() {
+        (<GameMap>this.playground.game_map).$canvas.on("contextmenu", () => {
             return false;  // 屏蔽网页右键菜单
         });
-        this.playground.game_map.$canvas.mousedown(function(e) {
+        // 监听鼠标事件
+        (<GameMap>this.playground.game_map).$canvas.on("mousedown", (e) => {
+
             if (outer.playground.state !== "fighting") {  // 只有fighting阶段能操作
                 return true;
             }
@@ -77,7 +116,7 @@ class Player extends WarlockGameObject {
                 outer.move_to(tx, ty);
 
                 if (outer.playground.mode === "multi mode") {
-                    outer.playground.mps.send_move_to(tx, ty);
+                    (<MultiPlayerSocket>outer.playground.mps).send_move_to(tx, ty);
                 }
             }
             else if (e.which === 1) {  // 按下鼠标左键使用技能
@@ -90,7 +129,7 @@ class Player extends WarlockGameObject {
                     let fireball = outer.shoot_fireball(tx, ty);
 
                     if (outer.playground.mode === "multi mode") {
-                        outer.playground.mps.send_shoot_fireball(tx, ty, fireball.uuid);
+                        (<MultiPlayerSocket>outer.playground.mps).send_shoot_fireball(tx, ty, fireball.uuid);
                     }
                 }
                 else if (outer.cur_skill === "blink") {
@@ -100,23 +139,24 @@ class Player extends WarlockGameObject {
                     outer.blink(tx, ty);
 
                     if (outer.playground.mode === "multi mode") {
-                        outer.playground.mps.send_blink(tx, ty);
+                        (<MultiPlayerSocket>outer.playground.mps).send_blink(tx, ty);
                     }
                 }
-                outer.cur_skill = null;  // 发射完取消技能握持
+                outer.cur_skill = "";  // 发射完取消技能握持
             }
         });
-
-        this.playground.game_map.$canvas.keydown(function(e) {
-            if (e.which === 13) {  // 按下回车键打开聊天框
+        
+        // 监听键盘事件
+        (<GameMap>this.playground.game_map).$canvas.on("keydown", (e) => {
+            if (e.key === "Enter") {  // 按下回车键打开聊天框
                 if (outer.playground.mode === "multi mode") {
-                    outer.playground.chat_field.show_input();
+                    (<ChatField>outer.playground.chat_field).show_input();
                     return false;
                 }
             }
-            else if (e.which === 27) {  // 按下esc关闭聊天框
+            else if (e.key === "Escape") {  // 按下esc关闭聊天框
                 if (outer.playground.mode === "multi mode") {
-                    outer.playground.chat_field.hide_input();
+                    (<ChatField>outer.playground.chat_field).hide_input();
                     return false;
                 }
             }
@@ -137,7 +177,7 @@ class Player extends WarlockGameObject {
     }
 
     // 发射火球
-    shoot_fireball(tx, ty) {
+    shoot_fireball(tx: number, ty: number) {
         let x = this.x, y = this.y;
         let radius = 0.01;
         let angle = Math.atan2(ty - this.y, tx - this.x);
@@ -153,7 +193,7 @@ class Player extends WarlockGameObject {
         return fireball;  // 为了获取火球的uuid
     }
 
-    blink(tx, ty) {
+    blink(tx: number, ty: number) {
         let d = this.get_dist(this.x, this.y, tx, ty);
         d = Math.min(d, 0.5);
         let angle = Math.atan2(ty - this.y, tx - this.x)
@@ -164,7 +204,7 @@ class Player extends WarlockGameObject {
         this.move_length = 0;  // 闪现完停下来
     }
 
-    destroy_fireball(uuid) {
+    destroy_fireball(uuid: string) {
         for (let i = 0; i < this.fireballs.length; i ++) {
             let fireball = this.fireballs[i];
             if (fireball.uuid === uuid) {
@@ -175,14 +215,14 @@ class Player extends WarlockGameObject {
     }
 
     // 获取当前位置与目标位置间的距离
-    get_dist(x1, y1, x2, y2) {
+    get_dist(x1: number, y1: number, x2: number, y2: number) {
         let dx = x1 - x2;
         let dy = y1 - y2;
         return Math.sqrt(dx * dx + dy * dy);
     }
 
     // 移动玩家到目标位置
-    move_to(tx, ty) {
+    move_to(tx: number, ty: number) {
         this.move_length = this.get_dist(this.x, this.y, tx, ty);
         let angle = Math.atan2(ty - this.y, tx - this.x);
         this.vx = Math.cos(angle);
@@ -190,7 +230,7 @@ class Player extends WarlockGameObject {
     }
 
     // 被技能击中
-    is_attacked(angle, damage) {
+    is_attacked(angle: number, damage: number) {
         // 触发粒子效果
         for (let i = 0; i < 20 + Math.random() * 10; i++) {
             let x = this.x;
@@ -215,7 +255,7 @@ class Player extends WarlockGameObject {
         this.speed *= 1.2;
     }
 
-    receive_attack(x, y, angle, damage, ball_uuid, attacker) {
+    receive_attack(x: number, y: number, angle: number, damage: number, ball_uuid: string, attacker: Player) {
         attacker.destroy_fireball(ball_uuid);
         this.x = x;
         this.y = y;
@@ -236,8 +276,8 @@ class Player extends WarlockGameObject {
 
     update_win() {
         if (this.playground.state === "fighting" && this.character === "me" && this.playground.players.length === 1) {
-            this.playground.state === "over";
-            this.playground.score_board.win();
+            this.playground.state = "over";
+            (<ScoreBoard>this.playground.score_board).win();
         }
     }
 
@@ -294,7 +334,7 @@ class Player extends WarlockGameObject {
             this.ctx.arc(this.x * scale, this.y * scale, this.radius * scale, 0, Math.PI * 2, false);
             this.ctx.stroke();
             this.ctx.clip();
-            this.ctx.drawImage(this.img, (this.x - this.radius) * scale, (this.y - this.radius) * scale, this.radius * 2 * scale, this.radius * 2 * scale);
+            this.ctx.drawImage(<HTMLImageElement>this.img, (this.x - this.radius) * scale, (this.y - this.radius) * scale, this.radius * 2 * scale, this.radius * 2 * scale);
             this.ctx.restore();
         }
         else {
@@ -319,7 +359,7 @@ class Player extends WarlockGameObject {
         this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);
         this.ctx.stroke();
         this.ctx.clip();
-        this.ctx.drawImage(this.fireball_image, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
+        this.ctx.drawImage(<HTMLImageElement>this.fireball_image, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
         this.ctx.restore();
 
         // 绘制冷却动画
@@ -339,7 +379,7 @@ class Player extends WarlockGameObject {
         this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);
         this.ctx.stroke();
         this.ctx.clip();
-        this.ctx.drawImage(this.blink_image, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
+        this.ctx.drawImage(<HTMLImageElement>this.blink_image, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
         this.ctx.restore();
 
          // 绘制冷却动画
@@ -357,7 +397,7 @@ class Player extends WarlockGameObject {
         if (this.character === "me") {
             if (this.playground.state === "fighting") {
                 this.playground.state = "over";  // 避免死了之后放技能
-                this.playground.score_board.lose();
+                (<ScoreBoard>this.playground.score_board).lose();
             }
         }
         for (let i = 0; i < this.playground.players.length; i++) {

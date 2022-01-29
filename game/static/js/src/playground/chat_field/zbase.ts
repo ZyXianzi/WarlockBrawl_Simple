@@ -1,5 +1,14 @@
-class ChatField {
-    constructor(playground) {
+import { GameMap } from "../game_map/zbase";
+import { MultiPlayerSocket } from "../socket/multiplayer/zbase";
+import { WarlockGamePlayground } from "../zbase";
+
+export class ChatField {
+    playground: WarlockGamePlayground;
+    $history: JQuery<HTMLElement>
+    $input: JQuery<HTMLElement>;
+    func_id: number;
+
+    constructor(playground: WarlockGamePlayground) {
         this.playground = playground;
 
         this.$history = $(`<div class="warlock_game_chat_field_history"></div>`);
@@ -7,7 +16,7 @@ class ChatField {
 
         this.$history.hide();
         this.$input.hide();
-        this.func_id = null;  // 检测计时器是否在运行
+        this.func_id = 0;  // 检测计时器是否在运行
         this.playground.$playground.append(this.$history);
         this.playground.$playground.append(this.$input);
 
@@ -20,35 +29,35 @@ class ChatField {
 
     add_listening_events() {  // 监听键盘
         let outer = this;
-        this.$history.on("contextmenu", function () {
+        this.$history.on("contextmenu", () => {
             return false;  // 屏蔽网页右键菜单
         });
-        this.$input.on("contextmenu", function () {
+        this.$input.on("contextmenu", () => {
             return false;  // 屏蔽网页右键菜单
         });
-        this.$input.keydown(function (e) {
+        this.$input.on("keydown", (e) => {
             if (e.which === 27) {
                 outer.hide_input();
                 return false;
             }
             else if (e.which === 13) {
                 let username = outer.playground.root.settings.username;
-                let text = outer.$input.val();
+                let text = <string>outer.$input.val();
                 if (text) {
                     outer.$input.val("");
                     outer.add_message(username, text);
-                    outer.playground.mps.send_message(username, text);
+                    (<MultiPlayerSocket>outer.playground.mps).send_message(username, text);
                 }
                 return false;
             }
         });
     }
 
-    render_message(message) {
+    render_message(message: string) {
         return $(`<div>${message}</div>`);
     }
 
-    add_message(username, text) {
+    add_message(username: string, text: string) {
         this.show_history();
         let message = `[${username}] ${text}`;
         this.$history.append(this.render_message(message));
@@ -63,7 +72,7 @@ class ChatField {
 
         this.func_id = setTimeout(function() {
             outer.$history.fadeOut();  // 淡出（jquery）
-            outer.func_id = null;
+            outer.func_id = 0;
         }, 3000);
     }
 
@@ -75,6 +84,6 @@ class ChatField {
 
     hide_input() {
         this.$input.hide();
-        this.playground.game_map.$canvas.focus();
+        (<GameMap>this.playground.game_map).$canvas.focus();
     }
 }

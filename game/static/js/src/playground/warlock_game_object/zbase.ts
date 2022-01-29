@@ -1,6 +1,10 @@
-let WARLOCK_GAME_OBJECTS = [];
+let WARLOCK_GAME_OBJECTS: WarlockGameObject[] = [];
 
 class WarlockGameObject {
+    has_called_start: boolean;
+    timedelta: number;
+    uuid: string;
+
     constructor() {
         WARLOCK_GAME_OBJECTS.push(this);
         this.has_called_start = false;  // 记录元素是否执行过start函数
@@ -11,7 +15,7 @@ class WarlockGameObject {
     create_uuid() {  // 给每个object创建一个唯一编号
         let res = "";
         for (let i = 0; i < 8; i ++) {
-            let x = parseInt(Math.floor(Math.random() * 10));
+            let x = Math.floor(Math.random() * 10);
             res += x;
         }
         return res;
@@ -45,8 +49,8 @@ class WarlockGameObject {
     }
 }
 
-let last_timestamp;  // 记录上一帧的时间戳
-let WARLOCK_GAME_ANIMATION = function(timestamp) {
+let last_timestamp: number;  // 记录上一帧的时间戳
+let WARLOCK_GAME_ANIMATION = (timestamp: number) => {
     for (let i = 0; i < WARLOCK_GAME_OBJECTS.length; i ++) {
         let obj = WARLOCK_GAME_OBJECTS[i];
         if (!obj.has_called_start) {  // 检查是否执行过start函数

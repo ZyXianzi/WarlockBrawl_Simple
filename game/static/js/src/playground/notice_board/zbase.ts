@@ -1,9 +1,16 @@
-class NoticeBoard extends WarlockGameObject {
-    constructor(playground) {
+import { WarlockGamePlayground } from "../zbase";
+import { GameMap } from "../game_map/zbase";
+
+export class NoticeBoard extends WarlockGameObject {
+    playground: WarlockGamePlayground;
+    ctx: CanvasRenderingContext2D;
+    text: string;
+
+    constructor(playground: WarlockGamePlayground) {
         super();
 
         this.playground = playground;
-        this.ctx = this.playground.game_map.ctx;
+        this.ctx = (<GameMap>this.playground.game_map).ctx;
         this.text = "已就绪0人";
     }
 
@@ -15,7 +22,7 @@ class NoticeBoard extends WarlockGameObject {
         this.render();
     }
 
-    write(text) {
+    write(text: string) {
         this.text = text;
     }
 

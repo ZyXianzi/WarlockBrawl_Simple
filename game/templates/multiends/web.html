@@ -11,7 +11,7 @@
     <div id="game"></div>
     <script type = "module">
         import {WarlockGame} from "{% static 'js/dist/game.js' %}";
-        $(document).ready(function() {
+        $(document).ready(() => {
             let warlock_game = new WarlockGame("game");  //直接使用前端js渲染页面
         });
     </script>

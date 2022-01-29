@@ -1,8 +1,24 @@
-class Particle extends WarlockGameObject {
-    constructor(playground, x, y, radius, vx, vy, color, speed, move_length) {
+import { WarlockGamePlayground } from "../zbase";
+import { GameMap } from "../game_map/zbase";
+
+export class Particle extends WarlockGameObject {
+    playground: WarlockGamePlayground;
+    ctx: CanvasRenderingContext2D;
+    x: number;
+    y: number;
+    radius: number;
+    vx: number;
+    vy: number;
+    color: string;
+    speed: number;
+    move_length: number;
+    friction: number;
+    eps: number;
+
+    constructor(playground: WarlockGamePlayground, x: number, y: number, radius: number, vx: number, vy: number, color: string, speed: number, move_length: number) {
         super();
         this.playground = playground;
-        this.ctx = this.playground.game_map.ctx;
+        this.ctx = (<GameMap>this.playground.game_map).ctx;
         this.x = x;
         this.y = y;
         this.radius = radius;

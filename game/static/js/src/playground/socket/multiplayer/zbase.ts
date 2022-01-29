@@ -1,5 +1,13 @@
-class MultiPlayerSocket {
-    constructor(playground) {
+import { WarlockGamePlayground } from "../../zbase";
+import { Player } from "../../player/zbase";
+import { ChatField } from "../../chat_field/zbase";
+
+export class MultiPlayerSocket {
+    playground: WarlockGamePlayground;
+    ws: WebSocket;
+    uuid: string = "";
+
+    constructor(playground: WarlockGamePlayground) {
         this.playground = playground;
 
         this.ws = new WebSocket("wss://app1186.acapp.acwing.com.cn/wss/multiplayer/");
@@ -40,7 +48,7 @@ class MultiPlayerSocket {
         }
     }
 
-    send_create_player(username, photo) {
+    send_create_player(username: string, photo: string) {
         let outer = this;
         this.ws.send(JSON.stringify({
             'event': "create_player",
@@ -50,7 +58,7 @@ class MultiPlayerSocket {
         }));
     }
 
-    get_player(uuid) {
+    get_player(uuid: string) {
         let players = this.playground.players;
         for (let i = 0; i < players.length; i ++) {
             let player = players[i];
@@ -61,7 +69,7 @@ class MultiPlayerSocket {
         return null;
     }
 
-    receive_create_player(uuid, username, photo) {
+    receive_create_player(uuid: string, username: string, photo: string) {
         let player = new Player(
             this.playground,
             this.playground.width / 2 / this.playground.scale,
@@ -78,7 +86,7 @@ class MultiPlayerSocket {
         this.playground.players.push(player);
     }
 
-    send_move_to(tx, ty) {
+    send_move_to(tx: number, ty: number) {
         let outer = this;
         this.ws.send(JSON.stringify({
             'event': "move_to",
@@ -88,7 +96,7 @@ class MultiPlayerSocket {
         }));
     }
 
-    receive_move_to(uuid, tx, ty) {
+    receive_move_to(uuid: string, tx: number, ty: number) {
         let player = this.get_player(uuid);
 
         if (player) {
@@ -96,7 +104,7 @@ class MultiPlayerSocket {
         }
     }
 
-    send_shoot_fireball(tx, ty, ball_uuid) {
+    send_shoot_fireball(tx: number, ty: number, ball_uuid: string) {
         let outer = this;
         this.ws.send(JSON.stringify({
             'event': "shoot_fireball",
@@ -107,7 +115,7 @@ class MultiPlayerSocket {
         }));
     }
 
-    receive_shoot_fireball(uuid, tx, ty, ball_uuid) {
+    receive_shoot_fireball(uuid: string, tx: number, ty: number, ball_uuid: string) {
         let player = this.get_player(uuid);
         if (player) {
             let fireball = player.shoot_fireball(tx, ty);
@@ -115,7 +123,7 @@ class MultiPlayerSocket {
         }
     }
 
-    send_attack(attackee_uuid, x, y, angle, damage, ball_uuid) {
+    send_attack(attackee_uuid: string, x: number, y: number, angle: number, damage: number, ball_uuid: string) {
         let outer = this;
         this.ws.send(JSON.stringify({
             'event': "attack",
@@ -129,7 +137,7 @@ class MultiPlayerSocket {
         }));
     }
 
-    receive_attack(uuid, attackee_uuid, x, y, angle, damage, ball_uuid) {
+    receive_attack(uuid: string, attackee_uuid: string, x: number, y: number, angle: number, damage: number, ball_uuid: string) {
         let attacker = this.get_player(uuid);
         let attackee = this.get_player(attackee_uuid);
         if (attacker && attackee) {
@@ -137,7 +145,7 @@ class MultiPlayerSocket {
         }
     }
 
-    send_blink(tx, ty) {
+    send_blink(tx: number, ty: number) {
         let outer = this;
         this.ws.send(JSON.stringify({
             'event': "blink",
@@ -147,14 +155,14 @@ class MultiPlayerSocket {
         }));
     }
 
-    receive_blink(uuid, tx, ty) {
+    receive_blink(uuid: string, tx: number, ty: number) {
         let player = this.get_player(uuid);
         if (player) {
             player.blink(tx, ty);
         }
     }
 
-    send_message(username, text) {
+    send_message(username: string, text: string) {
         let outer = this;
         this.ws.send(JSON.stringify({
             'event': "message",
@@ -164,7 +172,7 @@ class MultiPlayerSocket {
         }));
     }
 
-    receive_massage(uuid, username, text) {
-        this.playground.chat_field.add_message(username, text);
+    receive_massage(uuid: string, username: string, text: string) {
+        (<ChatField>this.playground.chat_field).add_message(username, text);
     }
 }

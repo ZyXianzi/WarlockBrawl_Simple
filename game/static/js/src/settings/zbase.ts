@@ -1,5 +1,27 @@
-class Settings {
-    constructor(root) {
+import { WarlockGame } from "../zbase";
+
+export class Settings {
+    root: WarlockGame;
+    platform: string;
+    username: string;
+    photo: string;
+    $settings: JQuery<HTMLElement>;
+    $login: JQuery<HTMLElement>;
+    $login_username: JQuery<HTMLElement>;
+    $login_password: JQuery<HTMLElement>;
+    $login_submit: JQuery<HTMLElement>;
+    $login_error_message: JQuery<HTMLElement>;
+    $login_register: JQuery<HTMLElement>;
+    $register: JQuery<HTMLElement>;
+    $register_username: JQuery<HTMLElement>;
+    $register_password: JQuery<HTMLElement>;
+    $register_password_confirm: JQuery<HTMLElement>;
+    $register_submit: JQuery<HTMLElement>;
+    $register_error_message: JQuery<HTMLElement>;
+    $register_login: JQuery<HTMLElement>;
+    $acwing_login: JQuery<HTMLElement>;
+
+    constructor(root: WarlockGame) {
         this.root = root;
         this.platform = "WEB";
         if (this.root.AcWingOS) this.platform = "ACAPP";
@@ -120,27 +142,27 @@ class Settings {
         this.add_listening_events_login();
         this.add_listening_events_register();
 
-        this.$acwing_login.click(function() {
+        this.$acwing_login.on("click", () => {
             outer.acwing_login();
         });
     }
 
     add_listening_events_login() {
         let outer = this;
-        this.$login_register.click(function() {
+        this.$login_register.on("click", () => {
             outer.register();
         });
-        this.$login_submit.click(function() {
+        this.$login_submit.on("click", () => {
             outer.login_on_remote();
         });
     }
 
     add_listening_events_register() {
         let outer = this;
-        this.$register_login.click(function() {
+        this.$register_login.on("click", () => {
             outer.login();
         });
-        this.$register_submit.click(function() {
+        this.$register_submit.on("click", () => {
             outer.register_on_remote();
         });
     }
@@ -170,7 +192,7 @@ class Settings {
                 username: username,
                 password: password,
             },
-            success: function(resp) {
+            success: (resp) => {
                 if (resp.result === "success") {
                     location.reload();  // 刷新页面
                 }
@@ -196,7 +218,7 @@ class Settings {
                 password: password,
                 password_confirm: password_confirm,
             },
-            success: function (resp) {
+            success: (resp) => {
                 if (resp.result === "success") {
                     location.reload();
                 }
@@ -215,7 +237,7 @@ class Settings {
             $.ajax({
                 url: "https://app1186.acapp.acwing.com.cn/settings/logout/",
                 type: "GET",
-                success: function (resp) {
+                success: (resp) => {
                     if (resp.result === "success") {
                         location.reload();
                     }
@@ -234,9 +256,9 @@ class Settings {
         this.$login.show();
     }
 
-    acapp_login(appid, redirect_uri, scope, state) {
+    acapp_login(appid: string, redirect_uri: string, scope: string, state: string) {
         let outer = this;
-        this.root.AcWingOS.api.oauth2.authorize(appid, redirect_uri, scope, state, function(resp) {
+        this.root.AcWingOS.api.oauth2.authorize(appid, redirect_uri, scope, state, function(resp: any) {
             if (resp.result === "success") {
                 outer.username = resp.username;
                 outer.photo = resp.photo;
@@ -251,7 +273,7 @@ class Settings {
         $.ajax({
             url: "https://app1186.acapp.acwing.com.cn/settings/acwing/acapp/apply_code/",
             type: "GET",
-            success: function(resp) {
+            success: (resp) => {
                 if (resp.result === "success") {
                     outer.acapp_login(resp.appid, resp.redirect_uri, resp.scope, resp.state);
                 }
@@ -268,7 +290,7 @@ class Settings {
             data: {
                 platform: outer.platform,
             },
-            success: function(resp) {
+            success: (resp) => {
                 if (resp.result === "success") {
                     outer.username = resp.username;
                     outer.photo = resp.photo;

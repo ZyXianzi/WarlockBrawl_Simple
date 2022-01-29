@@ -1,10 +1,19 @@
-class ScoreBoard extends WarlockGameObject {
-    constructor(playground) {
+import { WarlockGamePlayground } from "../zbase";
+import { GameMap } from "../game_map/zbase";
+
+export class ScoreBoard extends WarlockGameObject {
+    playground: WarlockGamePlayground;
+    ctx: CanvasRenderingContext2D;
+    state: string;
+    win_image: HTMLImageElement;
+    lose_image: HTMLImageElement;
+
+    constructor(playground: WarlockGamePlayground) {
         super();
         this.playground = playground;
-        this.ctx = this.playground.game_map.ctx;
+        this.ctx = (<GameMap>this.playground.game_map).ctx;
 
-        this.state = null;  // win or lose
+        this.state = "";  // win or lose
 
         this.win_image = new Image();
         this.win_image.src = "https://cdn.acwing.com/media/article/image/2021/12/17/1_8f58341a5e-win.png";
@@ -19,7 +28,7 @@ class ScoreBoard extends WarlockGameObject {
 
     add_listening_events() {
         let outer = this;
-        let $canvas = this.playground.game_map.$canvas;
+        let $canvas = (<GameMap>this.playground.game_map).$canvas;
 
         $canvas.on('click', function() {
             outer.playground.hide();

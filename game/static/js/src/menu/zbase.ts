@@ -1,5 +1,13 @@
-class WarlockGameMenu {
-    constructor(root) {  // root即为前端传入的对象
+import { WarlockGame } from "../zbase";
+
+export class WarlockGameMenu {
+    root: WarlockGame;
+    $menu: JQuery<HTMLElement>;
+    $single_mode: JQuery<HTMLElement>;
+    $multi_mode: JQuery<HTMLElement>;
+    $settings: JQuery<HTMLElement>;
+
+    constructor(root: WarlockGame) {  // root即为前端传入的对象
         this.root = root;
         this.$menu = $(`
 <div class="warlock_game_menu">
@@ -33,15 +41,15 @@ class WarlockGameMenu {
 
     add_listening_events() {
         let outer = this;
-        this.$single_mode.click(function() {
+        this.$single_mode.on("click", () => {
             outer.hide();
             outer.root.playground.show("single mode");
         });
-        this.$multi_mode.click(function () {
+        this.$multi_mode.on("click", () => {
             outer.hide();
             outer.root.playground.show("multi mode");
         });
-        this.$settings.click(function () {
+        this.$settings.on("click", () => {
             outer.root.settings.logout_on_remote();
         });
     }

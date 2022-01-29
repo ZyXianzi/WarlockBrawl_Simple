@@ -1,5 +1,28 @@
-class WarlockGamePlayground {
-    constructor(root) {
+import { WarlockGame } from "../zbase";
+import { GameMap } from "./game_map/zbase"
+import { Player } from "./player/zbase";
+import { NoticeBoard } from "./notice_board/zbase";
+import { ScoreBoard } from "./score_board/zbase";
+import { ChatField } from "./chat_field/zbase";
+import { MultiPlayerSocket } from "./socket/multiplayer/zbase";
+
+export class WarlockGamePlayground {
+    root: WarlockGame;
+    $playground: JQuery<HTMLElement>;
+    width: number = 0;
+    height: number = 0;
+    scale: number = 0;
+    game_map?: GameMap;
+    mode: string = "";
+    state: string = "";
+    notice_board?: NoticeBoard;
+    score_board?: ScoreBoard;
+    player_count: number = 0;
+    players: Player[] = [];
+    chat_field?: ChatField;
+    mps?: MultiPlayerSocket;
+
+    constructor(root: WarlockGame) {
         this.root = root;
         this.$playground = $(`<div class="warlock_game_playground"></div>`);
         
@@ -21,7 +44,7 @@ class WarlockGamePlayground {
     create_uuid() {  // 给每个resize函数创建一个唯一编号
         let res = "";
         for (let i = 0; i < 8; i++) {
-            let x = parseInt(Math.floor(Math.random() * 10));
+            let x = Math.floor(Math.random() * 10);
             res += x;
         }
         return res;
@@ -42,8 +65,8 @@ class WarlockGamePlayground {
     }
 
     resize() {  // 渲染地图为16：9
-        this.width = this.$playground.width();
-        this.height = this.$playground.height();
+        this.width = this.$playground.width() as number;
+        this.height = this.$playground.height() as number;
         let unit = Math.min(this.width / 16, this.height / 9);
         this.width = unit * 16;
         this.height = unit * 9;
@@ -52,12 +75,12 @@ class WarlockGamePlayground {
         if (this.game_map) this.game_map.resize();
     }
 
-    show(mode) {  // 打开playground界面
+    show(mode: string) {  // 打开playground界面
         let outer = this;
         this.$playground.show();
         // 打开playground界面后再初始化幕布大小
-        this.width = this.$playground.width();
-        this.height = this.$playground.height();
+        this.width = this.$playground.width() as number;
+        this.height = this.$playground.height() as number;
         this.game_map = new GameMap(this);
         // 打开地图后再初始化地图大小
 
@@ -83,7 +106,7 @@ class WarlockGamePlayground {
             this.mps.uuid = this.players[0].uuid;
 
             this.mps.ws.onopen = function() {
-                outer.mps.send_create_player(outer.root.settings.username, outer.root.settings.photo);
+                (<MultiPlayerSocket>outer.mps).send_create_player(outer.root.settings.username, outer.root.settings.photo);
             }
         }
     }
@@ -95,17 +118,17 @@ class WarlockGamePlayground {
         // 不能直接清空WARLOCK_GAME_OBJECTS因为acapp端不同窗口共用全局变量
         if (this.game_map) {
             this.game_map.destroy();
-            this.game_map = null;
+            //this.game_map = null;
         }
 
         if (this.notice_board) {
             this.notice_board.destroy();
-            this.notice_board = null;
+            //this.notice_board = null;
         }
 
         if (this.score_board) {
             this.score_board.destroy();
-            this.score_board = null;
+            //this.score_board = null;
         }
 
         this.$playground.empty();  // 清空html
