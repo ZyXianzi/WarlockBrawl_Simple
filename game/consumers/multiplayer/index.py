@@ -94,7 +94,7 @@ class MultiPlayer(AsyncWebsocketConsumer):
 
         if remain_cnt > 1:
             if self.room_name:
-                cache.set(self.room_name, players, 3600)
+                cache.set(self.room_name, players, 1800)
         else:
             def db_update_player_score(username, score):  # 战绩更新
                 player = Player.objects.get(user__username=username)

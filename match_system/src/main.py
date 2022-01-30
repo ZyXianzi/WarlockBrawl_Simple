@@ -39,8 +39,8 @@ class Pool:
         self.players.append(player)
 
     def check_match(self, a, b): 
-        #if a.username == b.username:
-        #    return False
+        if a.username == b.username:
+            return False
         dt = abs(a.score - b.score)
         a_max_dif = a.waiting_time * 50
         b_max_dif = b.waiting_time * 50

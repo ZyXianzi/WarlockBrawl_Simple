@@ -34,7 +34,7 @@ export class WarlockGamePlayground {
 
     get_random_color() {
         let colors = [
-                "DeepSkyBlue", "FireBrick", "Pink", "Grey", "SpringGreen",
+                "DeepSkyBlue", "FireBrick", "Pink", "SpringGreen",
                 "SlateBlue", "Cyan", "Khahi", "RosyBrown", "Violet",
                 "Aquamarine", "CadetBlue", "IndianRed", "OringeRed", "MediumPurple"
                 ];

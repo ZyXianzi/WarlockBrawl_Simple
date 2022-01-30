@@ -11,7 +11,7 @@ export class NoticeBoard extends WarlockGameObject {
 
         this.playground = playground;
         this.ctx = (<GameMap>this.playground.game_map).ctx;
-        this.text = "已就绪0人";
+        this.text = "未连接游戏服务器...";
     }
 
     start() {
