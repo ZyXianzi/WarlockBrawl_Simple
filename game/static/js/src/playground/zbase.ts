@@ -9,23 +9,32 @@ import { MultiPlayerSocket } from "./socket/multiplayer/zbase";
 export class WarlockGamePlayground {
     root: WarlockGame;
     $playground: JQuery<HTMLElement>;
+
     width: number = 0;
     height: number = 0;
     scale: number = 0;
+    virtual_map_width = 4;
+    virtual_map_height = 4;
+    cx?: number;
+    cy?: number;
+
+    mode?: string;
+    state: string = "waiting";
+
     game_map?: GameMap;
-    mode: string = "";
-    state: string = "";
     notice_board?: NoticeBoard;
     score_board?: ScoreBoard;
-    player_count: number = 0;
-    players: Player[] = [];
     chat_field?: ChatField;
     mps?: MultiPlayerSocket;
+
+    players: Player[] = [];
+    player_count: number = 0;
+    focus_player?: Player;
 
     constructor(root: WarlockGame) {
         this.root = root;
         this.$playground = $(`<div class="warlock_game_playground"></div>`);
-        
+
         this.hide();
         this.root.$warlock_game.append(this.$playground);
 
@@ -34,10 +43,10 @@ export class WarlockGamePlayground {
 
     get_random_color() {
         let colors = [
-                "DeepSkyBlue", "FireBrick", "Pink", "SpringGreen",
-                "SlateBlue", "Cyan", "Khahi", "RosyBrown", "Violet",
-                "Aquamarine", "CadetBlue", "IndianRed", "OringeRed", "MediumPurple"
-                ];
+            "DeepSkyBlue", "FireBrick", "Pink", "SpringGreen",
+            "SlateBlue", "Cyan", "Khahi", "RosyBrown", "Violet",
+            "Aquamarine", "CadetBlue", "IndianRed", "OringeRed", "MediumPurple"
+        ];
         return colors[Math.floor(Math.random() * 15)];
     }
 
@@ -53,20 +62,20 @@ export class WarlockGamePlayground {
     start() {
         let outer = this;
         let uuid = this.create_uuid();
-        $(window).on(`resize.$(uuid)`, function() {  // 用户改变窗口大小时触发
+        $(window).on(`resize.$(uuid)`, function () {  // 用户改变窗口大小时触发
             outer.resize();
         });
 
         if (this.root.AcWingOS) {
-            this.root.AcWingOS.api.window.on_close(function() {
+            this.root.AcWingOS.api.window.on_close(function () {
                 $(window).off(`resize.$(uuid)`);
             });
         }
     }
 
     resize() {  // 渲染地图为16：9
-        this.width = this.$playground.width() as number;
-        this.height = this.$playground.height() as number;
+        this.width = <number>this.$playground.width();
+        this.height = <number>this.$playground.height();
         let unit = Math.min(this.width / 16, this.height / 9);
         this.width = unit * 16;
         this.height = unit * 9;
@@ -75,29 +84,45 @@ export class WarlockGamePlayground {
         if (this.game_map) this.game_map.resize();
     }
 
+    get_center(x: number, y: number) {
+        this.cx = Math.max(x - 0.5 * this.width / this.scale, 0);
+        this.cx = Math.min(this.cx, this.virtual_map_width - this.width / this.scale);
+        this.cy = Math.max(y - 0.5 * this.height / this.scale, 0);
+        this.cy = Math.min(this.cy, this.virtual_map_height - 1);
+    }
+
     show(mode: string) {  // 打开playground界面
         let outer = this;
         this.$playground.show();
+
         // 打开playground界面后再初始化幕布大小
-        this.width = this.$playground.width() as number;
-        this.height = this.$playground.height() as number;
+        //this.width = <number>this.$playground.width();
+        //this.height = <number>this.$playground.height();
         this.game_map = new GameMap(this);
         // 打开地图后再初始化地图大小
 
         this.mode = mode;
-        this.state = "waiting";  // waiting -> fighting -> over 状态机
+        //this.state = "waiting";  // waiting -> fighting -> over 状态机
         this.notice_board = new NoticeBoard(this);
         this.score_board = new ScoreBoard(this);
         this.player_count = 0;
 
         this.resize();
 
-        this.players = [];
-        this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, "white", 0.15, "me", this.root.settings.username, this.root.settings.photo))
+        let player_x = Math.random() * this.virtual_map_width;
+        let player_y = Math.random() * this.virtual_map_height;
+        this.players.push(new Player(this, player_x, player_y, 0.05, "white", 0.15, "me", this.root.settings.username, this.root.settings.photo))
+
+        // 将视角锁定至玩家
+        this.get_center(this.players[0].x, this.players[0].y);
+        this.focus_player = this.players[0];
 
         if (mode === "single mode") {
-            for (let i = 0; i < 5; i++) {
-                this.players.push(new Player(this, this.width / 2 / this.scale, 0.5, 0.05, this.get_random_color(), 0.15, "robot"))
+            for (let i = 0; i < 10; i++) {
+                // 在随机位置生成AI玩家
+                let px = Math.random() * this.virtual_map_width;
+                let py = Math.random() * this.virtual_map_height;
+                this.players.push(new Player(this, px, py, 0.05, this.get_random_color(), 0.15, "robot"));
             }
         }
         else if (mode === "multi mode") {
@@ -105,7 +130,7 @@ export class WarlockGamePlayground {
             this.mps = new MultiPlayerSocket(this);
             this.mps.uuid = this.players[0].uuid;
 
-            this.mps.ws.onopen = function() {
+            this.mps.ws.onopen = function () {
                 (<MultiPlayerSocket>outer.mps).send_create_player(outer.root.settings.username, outer.root.settings.photo);
             }
         }
