@@ -22,11 +22,13 @@ from django.core.cache import cache
 queue = Queue()  # 定义消息队列
 
 class Player:
-    def __init__(self, score, uuid, username, photo, channel_name):
+    def __init__(self, score, uuid, username, photo, player_x, player_y, channel_name):
         self.score = score
         self.uuid = uuid
         self.username = username
         self.photo = photo
+        self.player_x = player_x
+        self.player_y = player_y
         self.channel_name = channel_name
         self.waiting_time = 0  # 等待时间
 
@@ -56,6 +58,8 @@ class Pool:
                 'uuid': p.uuid,
                 'username': p.username,
                 'photo': p.photo,
+                'player_x': p.player_x,
+                'player_y': p.player_y,
                 'hp': 100,
             })
         cache.set(room_name, players, 3600)  # 有效时间1小时
@@ -68,6 +72,8 @@ class Pool:
                     'uuid': p.uuid,
                     'username': p.username,
                     'photo': p.photo,
+                    'player_x': p.player_x,
+                    'player_y': p.player_y,
                 }
             )
 
@@ -92,9 +98,9 @@ class Pool:
         self.increase_waiting_time()
 
 class MatchHandler:
-   def add_player(self, score, uuid, username, photo, channel_name):
+   def add_player(self, score, uuid, username, photo, player_x, player_y,channel_name):
        print("Add Player: %s %d" % (username, score))
-       player = Player(score, uuid, username, photo, channel_name)
+       player = Player(score, uuid, username, photo, player_x, player_y, channel_name)
        queue.put(player)
        return 0  # 必须要加上 return 0
 

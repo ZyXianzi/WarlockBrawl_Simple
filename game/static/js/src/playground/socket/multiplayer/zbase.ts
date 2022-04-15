@@ -28,7 +28,7 @@ export class MultiPlayerSocket {
 
             let event = data.event;
             if (event === "create_player") {
-                outer.receive_create_player(uuid, data.username, data.photo);
+                outer.receive_create_player(uuid, data.username, data.photo, data.player_x, data.player_y);
             }
             else if (event === "move_to") {
                 outer.receive_move_to(uuid, data.tx, data.ty);
@@ -48,13 +48,16 @@ export class MultiPlayerSocket {
         }
     }
 
-    send_create_player(username: string, photo: string) {
+    send_create_player(username: string, photo: string, player_x: number, player_y: number) {
+        console.log(player_x, player_y);
         let outer = this;
         this.ws.send(JSON.stringify({
             'event': "create_player",
             'uuid': outer.uuid,
             'username': username,
             'photo': photo,
+            'player_x': player_x,
+            'player_y': player_y,
         }));
     }
 
@@ -69,13 +72,14 @@ export class MultiPlayerSocket {
         return null;
     }
 
-    receive_create_player(uuid: string, username: string, photo: string) {
+    receive_create_player(uuid: string, username: string, photo: string, player_x: number, player_y: number) {
+        console.log(player_x, player_y);
         let player = new Player(
             this.playground,
-            this.playground.width / 2 / this.playground.scale,
-            0.5,
+            player_x,
+            player_y,
             0.05,
-            "white",
+            this.playground.get_random_color(),
             0.15,
             "enemy",
             username,

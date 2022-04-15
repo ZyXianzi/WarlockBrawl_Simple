@@ -19,13 +19,15 @@ all_structs = []
 
 
 class Iface(object):
-    def add_player(self, score, uuid, username, photo, channel_name):
+    def add_player(self, score, uuid, username, photo, player_x, player_y, channel_name):
         """
         Parameters:
          - score
          - uuid
          - username
          - photo
+         - player_x
+         - player_y
          - channel_name
 
         """
@@ -39,26 +41,30 @@ class Client(Iface):
             self._oprot = oprot
         self._seqid = 0
 
-    def add_player(self, score, uuid, username, photo, channel_name):
+    def add_player(self, score, uuid, username, photo, player_x, player_y, channel_name):
         """
         Parameters:
          - score
          - uuid
          - username
          - photo
+         - player_x
+         - player_y
          - channel_name
 
         """
-        self.send_add_player(score, uuid, username, photo, channel_name)
+        self.send_add_player(score, uuid, username, photo, player_x, player_y, channel_name)
         return self.recv_add_player()
 
-    def send_add_player(self, score, uuid, username, photo, channel_name):
+    def send_add_player(self, score, uuid, username, photo, player_x, player_y, channel_name):
         self._oprot.writeMessageBegin('add_player', TMessageType.CALL, self._seqid)
         args = add_player_args()
         args.score = score
         args.uuid = uuid
         args.username = username
         args.photo = photo
+        args.player_x = player_x
+        args.player_y = player_y
         args.channel_name = channel_name
         args.write(self._oprot)
         self._oprot.writeMessageEnd()
@@ -113,7 +119,7 @@ class Processor(Iface, TProcessor):
         iprot.readMessageEnd()
         result = add_player_result()
         try:
-            result.success = self._handler.add_player(args.score, args.uuid, args.username, args.photo, args.channel_name)
+            result.success = self._handler.add_player(args.score, args.uuid, args.username, args.photo, args.player_x, args.player_y, args.channel_name)
             msg_type = TMessageType.REPLY
         except TTransport.TTransportException:
             raise
@@ -140,16 +146,20 @@ class add_player_args(object):
      - uuid
      - username
      - photo
+     - player_x
+     - player_y
      - channel_name
 
     """
 
 
-    def __init__(self, score=None, uuid=None, username=None, photo=None, channel_name=None,):
+    def __init__(self, score=None, uuid=None, username=None, photo=None, player_x=None, player_y=None, channel_name=None,):
         self.score = score
         self.uuid = uuid
         self.username = username
         self.photo = photo
+        self.player_x = player_x
+        self.player_y = player_y
         self.channel_name = channel_name
 
     def read(self, iprot):
@@ -182,6 +192,16 @@ class add_player_args(object):
                 else:
                     iprot.skip(ftype)
             elif fid == 5:
+                if ftype == TType.DOUBLE:
+                    self.player_x = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 6:
+                if ftype == TType.DOUBLE:
+                    self.player_y = iprot.readDouble()
+                else:
+                    iprot.skip(ftype)
+            elif fid == 7:
                 if ftype == TType.STRING:
                     self.channel_name = iprot.readString().decode('utf-8', errors='replace') if sys.version_info[0] == 2 else iprot.readString()
                 else:
@@ -212,8 +232,16 @@ class add_player_args(object):
             oprot.writeFieldBegin('photo', TType.STRING, 4)
             oprot.writeString(self.photo.encode('utf-8') if sys.version_info[0] == 2 else self.photo)
             oprot.writeFieldEnd()
+        if self.player_x is not None:
+            oprot.writeFieldBegin('player_x', TType.DOUBLE, 5)
+            oprot.writeDouble(self.player_x)
+            oprot.writeFieldEnd()
+        if self.player_y is not None:
+            oprot.writeFieldBegin('player_y', TType.DOUBLE, 6)
+            oprot.writeDouble(self.player_y)
+            oprot.writeFieldEnd()
         if self.channel_name is not None:
-            oprot.writeFieldBegin('channel_name', TType.STRING, 5)
+            oprot.writeFieldBegin('channel_name', TType.STRING, 7)
             oprot.writeString(self.channel_name.encode('utf-8') if sys.version_info[0] == 2 else self.channel_name)
             oprot.writeFieldEnd()
         oprot.writeFieldStop()
@@ -239,7 +267,9 @@ add_player_args.thrift_spec = (
     (2, TType.STRING, 'uuid', 'UTF8', None, ),  # 2
     (3, TType.STRING, 'username', 'UTF8', None, ),  # 3
     (4, TType.STRING, 'photo', 'UTF8', None, ),  # 4
-    (5, TType.STRING, 'channel_name', 'UTF8', None, ),  # 5
+    (5, TType.DOUBLE, 'player_x', None, None, ),  # 5
+    (6, TType.DOUBLE, 'player_y', None, None, ),  # 6
+    (5, TType.STRING, 'channel_name', 'UTF8', None, ),  # 7
 )
 
 

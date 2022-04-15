@@ -22,6 +22,7 @@ class MultiPlayer(AsyncWebsocketConsumer):
     async def create_player(self, data):
         self.room_name = None
         self.uuid = data['uuid']
+
         # Make socket
         transport = TSocket.TSocket('127.0.0.1', 9090)
         # Buffering is critical. Raw sockets are very slow
@@ -39,7 +40,8 @@ class MultiPlayer(AsyncWebsocketConsumer):
         # Connect!
         transport.open()
 
-        client.add_player(player.score, data['uuid'], data['username'], data['photo'], self.channel_name)
+        client.add_player(player.score, data['uuid'], data['username'], data['photo'], data['player_x'], data['player_y'], self.channel_name)
+        print(data['player_x'], data['player_y'])
         # Close!
         transport.close()
 

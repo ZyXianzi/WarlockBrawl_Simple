@@ -54,6 +54,13 @@ export class Particle extends WarlockGameObject {
         let ctx_x = this.x - <number>this.playground.cx;
         let ctx_y = this.y - <number>this.playground.cy;
 
+        if (ctx_x < -0.2 * this.playground.width / scale ||
+            ctx_x > 1.2 * this.playground.width / scale ||
+            ctx_y < -0.2 * this.playground.height / scale ||
+            ctx_y > 1.2 * this.playground.height / scale) {
+            return;
+        }
+
         this.ctx.beginPath();
         this.ctx.arc(ctx_x * scale, ctx_y * scale, this.radius * scale, 0, Math.PI * 2, false);
         this.ctx.fillStyle = this.color;

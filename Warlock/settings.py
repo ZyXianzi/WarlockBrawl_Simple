@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-kp*7w-ee%ej=t^7yn*f3!v9+9ye&gq#883_+tt+ddtuxz!#pp@
 DEBUG = True
 
 ALLOWED_HOSTS = ["game.ichjliebendich.asia",
-                 "https://app1186.acapp.acwing.com.cn"]
+                 "app1186.acapp.acwing.com.cn"]
 
 
 # Application definition

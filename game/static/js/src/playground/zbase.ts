@@ -109,8 +109,10 @@ export class WarlockGamePlayground {
 
         this.resize();
 
+        // 记录玩家生成位置
         let player_x = Math.random() * this.virtual_map_width;
         let player_y = Math.random() * this.virtual_map_height;
+        console.log(player_x, player_y);
         this.players.push(new Player(this, player_x, player_y, 0.05, "white", 0.15, "me", this.root.settings.username, this.root.settings.photo))
 
         // 将视角锁定至玩家
@@ -131,7 +133,7 @@ export class WarlockGamePlayground {
             this.mps.uuid = this.players[0].uuid;
 
             this.mps.ws.onopen = function () {
-                (<MultiPlayerSocket>outer.mps).send_create_player(outer.root.settings.username, outer.root.settings.photo);
+                (<MultiPlayerSocket>outer.mps).send_create_player(outer.root.settings.username, outer.root.settings.photo, player_x, player_y);
             }
         }
     }
