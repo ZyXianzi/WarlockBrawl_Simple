@@ -84,6 +84,7 @@ export class WarlockGamePlayground {
         if (this.game_map) this.game_map.resize();
     }
 
+    // 获取当前玩家位置在地图上的坐标
     get_center(x: number, y: number) {
         this.cx = Math.max(x - 0.5 * this.width / this.scale, 0);
         this.cx = Math.min(this.cx, this.virtual_map_width - this.width / this.scale);
@@ -112,7 +113,6 @@ export class WarlockGamePlayground {
         // 记录玩家生成位置
         let player_x = Math.random() * this.virtual_map_width;
         let player_y = Math.random() * this.virtual_map_height;
-        console.log(player_x, player_y);
         this.players.push(new Player(this, player_x, player_y, 0.05, "white", 0.15, "me", this.root.settings.username, this.root.settings.photo))
 
         // 将视角锁定至玩家
@@ -120,7 +120,7 @@ export class WarlockGamePlayground {
         this.focus_player = this.players[0];
 
         if (mode === "single mode") {
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 2; i++) {
                 // 在随机位置生成AI玩家
                 let px = Math.random() * this.virtual_map_width;
                 let py = Math.random() * this.virtual_map_height;

@@ -14,10 +14,13 @@ export class Player extends WarlockGameObject {
     y: number;
     tx?: number;  // 当前移动目标的坐标
     ty?: number;
-    mx?: number;  // 当前鼠标指针坐标（快捷施法用）
-    my?: number;
+    real_mouse_x?: number;
+    real_mouse_y?: number;
+    virtual_mouse_x?: number;  // 当前鼠标指针坐标（快捷施法用）
+    virtual_mouse_y?: number;
     vx: number;  // 当前移动方向
     vy: number;
+
     damage_x: number;  // 受击后的移动方向
     damage_y: number;
     damage_speed: number;  // 受击后的移动速度
@@ -39,6 +42,9 @@ export class Player extends WarlockGameObject {
     blink_coldtime: number = 5;  // 闪现cd
     blink_image?: HTMLImageElement;  // 闪现技能图片
 
+    scale;
+    ctx_x;
+    ctx_y;
 
     constructor(playground: WarlockGamePlayground, x: number, y: number, radius: number, color: string, speed: number, character: string, username?: string, photo?: string) {
         super();
@@ -63,6 +69,10 @@ export class Player extends WarlockGameObject {
         this.spent_time = 0;
         this.fireballs = [];
         this.cur_skill = "";
+
+        this.scale = this.playground.scale;
+        this.ctx_x = this.x - <number>this.playground.cx;
+        this.ctx_y = this.y - <number>this.playground.cy;
 
         if (this.character !== "robot") {
             this.img = new Image(); // canvas用图片填充圆形
@@ -109,8 +119,11 @@ export class Player extends WarlockGameObject {
         // 监听鼠标移动
         (<GameMap>this.playground.game_map).$canvas.on("mousemove", (e) => {
             const rect = outer.ctx.canvas.getBoundingClientRect();  // 记录画布与屏幕的相对位置
-            outer.mx = (e.clientX - rect.left) / outer.playground.scale + <number>outer.playground.cx;
-            outer.my = (e.clientY - rect.top) / outer.playground.scale + <number>outer.playground.cy;
+            const scale = outer.playground.scale;
+            outer.real_mouse_x = (e.clientX - rect.left) / scale;
+            outer.real_mouse_y = (e.clientY - rect.top) / scale;
+            outer.virtual_mouse_x = outer.real_mouse_x + <number>outer.playground.cx;
+            outer.virtual_mouse_y = outer.real_mouse_y + <number>outer.playground.cy;
         });
 
         // 监听鼠标点击事件
@@ -122,8 +135,8 @@ export class Player extends WarlockGameObject {
 
             const rect = outer.ctx.canvas.getBoundingClientRect();  // 记录画布与屏幕的相对位置
             if (e.button === 2) {  // 按下鼠标右键移动
-                outer.tx = <number>outer.mx;
-                outer.ty = <number>outer.my;
+                outer.tx = <number>outer.virtual_mouse_x;
+                outer.ty = <number>outer.virtual_mouse_y;
                 outer.move_to(outer.tx, outer.ty);
 
                 if (outer.playground.mode === "multi mode") {
@@ -199,15 +212,15 @@ export class Player extends WarlockGameObject {
         // 监听抬起键的事件
         (<GameMap>this.playground.game_map).$canvas.on("keyup", (e) => {
             if (e.key === "q" && outer.cur_skill === "fireball") {
-                let fireball = outer.shoot_fireball(<number>outer.mx, <number>outer.my);
+                let fireball = outer.shoot_fireball(<number>outer.virtual_mouse_x, <number>outer.virtual_mouse_y);
                 if (outer.playground.mode === "multi mode") {
-                    (<MultiPlayerSocket>outer.playground.mps).send_shoot_fireball(<number>outer.mx, <number>outer.my, fireball.uuid);
+                    (<MultiPlayerSocket>outer.playground.mps).send_shoot_fireball(<number>outer.virtual_mouse_x, <number>outer.virtual_mouse_y, fireball.uuid);
                 }
             }
             else if (e.key === "f" && outer.cur_skill === "blink") {
-                outer.blink(<number>outer.mx, <number>outer.my);
+                outer.blink(<number>outer.virtual_mouse_x, <number>outer.virtual_mouse_y);
                 if (outer.playground.mode === "multi mode") {
-                    (<MultiPlayerSocket>outer.playground.mps).send_blink(<number>outer.mx, <number>outer.my);
+                    (<MultiPlayerSocket>outer.playground.mps).send_blink(<number>outer.virtual_mouse_x, <number>outer.virtual_mouse_y);
                 }
             }
             outer.cur_skill = "";
@@ -234,7 +247,7 @@ export class Player extends WarlockGameObject {
     blink(tx: number, ty: number) {
         let d = this.get_dist(this.x, this.y, tx, ty);
         d = Math.min(d, 0.5);
-        let angle = Math.atan2(ty - this.y, tx - this.x)
+        let angle = Math.atan2(ty - this.y, tx - this.x);
         this.x += d * Math.cos(angle);
         this.y += d * Math.sin(angle);
 
@@ -314,7 +327,20 @@ export class Player extends WarlockGameObject {
         }
 
         this.update_move();
-        this.render();
+
+        this.scale = this.playground.scale;
+        this.ctx_x = this.x - <number>this.playground.cx;
+        this.ctx_y = this.y - <number>this.playground.cy;
+
+        if (this.character === "me" && this.cur_skill !== "") {
+            this.render_skill_route();
+        }
+
+        if (this.character === "me" && this.move_length > this.eps) {
+            this.render_move_route();
+        }
+
+        this.render_players();
     }
 
     update_win() {
@@ -370,7 +396,7 @@ export class Player extends WarlockGameObject {
         }
     }
 
-    render() {
+    render_players() {
         let scale = this.playground.scale;
         let ctx_x = this.x - <number>this.playground.cx;
         let ctx_y = this.y - <number>this.playground.cy;
@@ -380,22 +406,6 @@ export class Player extends WarlockGameObject {
             ctx_y < -0.2 * this.playground.height / scale ||
             ctx_y > 1.2 * this.playground.height / scale) {
             return;
-        }
-
-        // FIXME: 路径绘制不正确
-        // 绘制移动路径
-        if (this.character === "me" && this.move_length !== 0) {
-            //this.render_route("move", <number>this.tx, <number>this.ty);
-        }
-
-        // 绘制火球路径及射程
-        if (this.character === "me" && this.cur_skill === "fireball") {
-            //this.render_route("fireball", <number>this.mx, <number>this.my);
-        }
-
-        // 绘制闪现路径及射程
-        if (this.character === "me" && this.cur_skill === "blink") {
-            //this.render_route("blink", <number>this.mx, <number>this.my);
         }
 
         // 若是真实玩家则填充头像
@@ -465,56 +475,50 @@ export class Player extends WarlockGameObject {
         }
     }
 
-    render_route(type: string, tx: number, ty: number) {
-        let scale = this.playground.scale;
-        let ctx_x = this.x - <number>this.playground.cx;
-        let ctx_y = this.y - <number>this.playground.cy;
-        // 移动路径
-        if (type === "move") {
-            this.ctx.save();  // 一定要加
-            this.ctx.beginPath();  // 重置路线
-            this.ctx.setLineDash([20, 30]);  // 设置虚线间隔
-            this.ctx.lineCap = "round"  // 设置直线端点类型
-            this.ctx.lineWidth = 4;  // 设置直线宽度
-            this.ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";  // 设置直线样式
-            this.ctx.moveTo(ctx_x * scale, ctx_y * scale);  // 设置起点
-            this.ctx.lineTo(tx * scale, ty * scale);  // 设置终点
-            this.ctx.stroke();  // 按照上面的设置开始绘制
-            this.ctx.restore();  // 一定要加
-        }
-        // 火球路径
-        else if (type === "fireball") {
-            let d = this.get_dist(ctx_x, ctx_y, tx, ty);
-            d = Math.min(d, 1);  // 直线长度不超过射程
-            let angle = Math.atan2(ty - ctx_y, tx - ctx_x)
-            let dx = d * Math.cos(angle);
-            let dy = d * Math.sin(angle);
+    // 渲染移动路径
+    render_move_route() {
+        let target_x = <number>this.tx - <number>this.playground.cx;
+        let target_y = <number>this.ty - <number>this.playground.cy;
+        this.ctx.save();  // 一定要加
+        this.ctx.beginPath();  // 重置路线
+        this.ctx.setLineDash([20, 30]);  // 设置虚线间隔
+        this.ctx.lineCap = "round"  // 设置直线端点类型
+        this.ctx.lineWidth = 0.01 * this.scale;  // 设置直线宽度
+        this.ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";  // 设置直线样式
+        this.ctx.moveTo(target_x * this.scale, target_y * this.scale);  // 设置起点
+        this.ctx.lineTo(this.ctx_x * this.scale, this.ctx_y * this.scale);  // 设置终点
+        this.ctx.stroke();  // 按照上面的设置开始绘制
+        this.ctx.restore();  // 一定要加
+    }
+
+    // 渲染技能路径
+    render_skill_route() {
+        if (this.cur_skill !== "") {
+            // FIXME: d计算不正确
+            let mx = <number>this.real_mouse_x - this.ctx_x;
+            let my = <number>this.real_mouse_y - this.ctx_y;
+            let d = 1;
+            let angle = Math.atan2(my, mx);
 
             this.ctx.save();
             this.ctx.beginPath();
             this.ctx.lineCap = "round";
-            this.ctx.lineWidth = 2;
-            this.ctx.strokeStyle = "orange";
-            this.ctx.moveTo(ctx_x * scale, ctx_y * scale);
-            this.ctx.lineTo((ctx_x + dx) * scale, (ctx_y + dy) * scale);
-            this.ctx.stroke();
-            this.ctx.restore();
-        }
-        // 闪现路径
-        else if (type === "blink") {
-            let d = this.get_dist(ctx_x, ctx_y, tx, ty);
-            d = Math.min(d, 0.5);  // 直线长度不超过射程
-            let angle = Math.atan2(ty - ctx_y, tx - ctx_x)
+            this.ctx.lineWidth = 0.005 * this.scale;
+            
+            if (this.cur_skill === "fireball") {
+                this.ctx.strokeStyle = "orange";
+                d = Math.min(d, 1);  // 最大长度不超过技能射程
+            }
+            else if (this.cur_skill === "blink") {
+                this.ctx.strokeStyle = "blue";
+                d = Math.min(d, 0.5);
+            }
+            
             let dx = d * Math.cos(angle);
             let dy = d * Math.sin(angle);
-
-            this.ctx.save();
-            this.ctx.beginPath();
-            this.ctx.lineCap = "round";
-            this.ctx.lineWidth = 2;
-            this.ctx.strokeStyle = "blue";
-            this.ctx.moveTo(ctx_x * scale, ctx_y * scale);
-            this.ctx.lineTo((ctx_x + dx) * scale, (ctx_y + dy) * scale);
+            this.ctx.moveTo(this.ctx_x * this.scale, this.ctx_y * this.scale);
+            this.ctx.lineTo((this.ctx_x + dx) * this.scale, (this.ctx_y + dy) * this.scale);
+            this.ctx.closePath();
             this.ctx.stroke();
             this.ctx.restore();
         }

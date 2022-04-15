@@ -49,7 +49,6 @@ export class MultiPlayerSocket {
     }
 
     send_create_player(username: string, photo: string, player_x: number, player_y: number) {
-        console.log(player_x, player_y);
         let outer = this;
         this.ws.send(JSON.stringify({
             'event': "create_player",
@@ -73,7 +72,6 @@ export class MultiPlayerSocket {
     }
 
     receive_create_player(uuid: string, username: string, photo: string, player_x: number, player_y: number) {
-        console.log(player_x, player_y);
         let player = new Player(
             this.playground,
             player_x,
