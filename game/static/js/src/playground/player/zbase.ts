@@ -359,7 +359,7 @@ export class Player extends WarlockGameObject {
 
     update_move() {
         // ai射击玩家
-        if (this.character === "robot" && this.spent_time > 3 && Math.random() < 1 / 500.0) {
+        if (this.character === "robot" && this.spent_time > 3 && Math.random() < 1 / 100.0) {
             let player = this.playground.players[0];
             let targetx = player.x + player.speed * player.vx * this.timedelta / 1000 * 0.3;
             let targety = player.y + player.speed * player.vy * this.timedelta / 1000 * 0.3;
@@ -382,8 +382,8 @@ export class Player extends WarlockGameObject {
                 this.tx = this.ty = undefined;
 
                 if (this.character === "robot") {  // ai随机移动                                     
-                    let rx = Math.random() * this.playground.width / this.playground.scale;
-                    let ry = Math.random() * this.playground.height / this.playground.scale;
+                    let rx = Math.random() * this.playground.virtual_map_width;
+                    let ry = Math.random() * this.playground.virtual_map_height;
                     this.move_to(rx, ry);
                 }
             }
@@ -426,59 +426,61 @@ export class Player extends WarlockGameObject {
         }  
         
         // 绘制自己的技能图标及cd动画
-        if (this.character === "me" && this.playground.state === "fighting") {
-            this.render_skill_coldtime();
-        }
+        // if (this.character === "me" && this.playground.state === "fighting") {
+        //     this.render_skill_coldtime();
+        // }
     }
 
-    render_skill_coldtime() {
-        let scale = this.playground.scale;
-        let x = 1.5, y = 0.9, r = 0.04;
+    // render_skill_coldtime() {
+    //     let scale = this.playground.scale;
+    //     let x = 1.5, y = 0.9, r = 0.04;
 
-        // 绘制火球技能图标
-        this.ctx.save();
-        this.ctx.beginPath();
-        this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);
-        this.ctx.stroke();
-        this.ctx.clip();
-        this.ctx.drawImage(<HTMLImageElement>this.fireball_image, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
-        this.ctx.restore();
+    //     // 绘制火球技能图标
+    //     this.ctx.save();
+    //     this.ctx.beginPath();
+    //     this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);
+    //     this.ctx.stroke();
+    //     this.ctx.clip();
+    //     this.ctx.drawImage(<HTMLImageElement>this.fireball_image, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
+    //     this.ctx.restore();
 
-        // 绘制冷却动画
-        if (this.fireball_coldtime > 0) {  
-            this.ctx.beginPath();  // 蒙版
-            this.ctx.moveTo(x * scale, y * scale);
-            this.ctx.arc(x * scale, y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.fireball_coldtime / 3) - Math.PI / 2, true);  // 生成圆形
-            this.ctx.lineTo(x * scale, y * scale);
-            this.ctx.fillStyle = "rgba(34, 34, 34, 0.8)";
-            this.ctx.fill();
-        }
+    //     // 绘制冷却动画
+    //     if (this.fireball_coldtime > 0) {  
+    //         this.ctx.beginPath();  // 蒙版
+    //         this.ctx.moveTo(x * scale, y * scale);
+    //         this.ctx.arc(x * scale, y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.fireball_coldtime / 3) - Math.PI / 2, true);  // 生成圆形
+    //         this.ctx.lineTo(x * scale, y * scale);
+    //         this.ctx.fillStyle = "rgba(34, 34, 34, 0.8)";
+    //         this.ctx.fill();
+    //     }
 
-        // 绘制闪现技能图标
-        x = 1.62, y = 0.9, r = 0.04;
-        this.ctx.save();
-        this.ctx.beginPath();
-        this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);
-        this.ctx.stroke();
-        this.ctx.clip();
-        this.ctx.drawImage(<HTMLImageElement>this.blink_image, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
-        this.ctx.restore();
+    //     // 绘制闪现技能图标
+    //     x = 1.62, y = 0.9, r = 0.04;
+    //     this.ctx.save();
+    //     this.ctx.beginPath();
+    //     this.ctx.arc(x * scale, y * scale, r * scale, 0, Math.PI * 2, false);
+    //     this.ctx.stroke();
+    //     this.ctx.clip();
+    //     this.ctx.drawImage(<HTMLImageElement>this.blink_image, (x - r) * scale, (y - r) * scale, r * 2 * scale, r * 2 * scale);
+    //     this.ctx.restore();
 
-         // 绘制冷却动画
-        if (this.blink_coldtime > 0) {
-            this.ctx.beginPath();  // 蒙版
-            this.ctx.moveTo(x * scale, y * scale);
-            this.ctx.arc(x * scale, y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.blink_coldtime / 5) - Math.PI / 2, true);  // 生成圆形
-            this.ctx.lineTo(x * scale, y * scale);
-            this.ctx.fillStyle = "rgba(34, 34, 34, 0.8)";
-            this.ctx.fill();
-        }
-    }
+    //      // 绘制冷却动画
+    //     if (this.blink_coldtime > 0) {
+    //         this.ctx.beginPath();  // 蒙版
+    //         this.ctx.moveTo(x * scale, y * scale);
+    //         this.ctx.arc(x * scale, y * scale, r * scale, 0 - Math.PI / 2, Math.PI * 2 * (1 - this.blink_coldtime / 5) - Math.PI / 2, true);  // 生成圆形
+    //         this.ctx.lineTo(x * scale, y * scale);
+    //         this.ctx.fillStyle = "rgba(34, 34, 34, 0.8)";
+    //         this.ctx.fill();
+    //     }
+    // }
 
     // 渲染移动路径
     render_move_route() {
         let target_x = <number>this.tx - <number>this.playground.cx;
         let target_y = <number>this.ty - <number>this.playground.cy;
+        console.log(this.playground.cx, this.playground.cy);
+        console.log()
         this.ctx.save();  // 一定要加
         this.ctx.beginPath();  // 重置路线
         this.ctx.setLineDash([20, 30]);  // 设置虚线间隔
@@ -494,10 +496,9 @@ export class Player extends WarlockGameObject {
     // 渲染技能路径
     render_skill_route() {
         if (this.cur_skill !== "") {
-            // FIXME: d计算不正确
             let mx = <number>this.real_mouse_x - this.ctx_x;
             let my = <number>this.real_mouse_y - this.ctx_y;
-            let d = 1;
+            let d = 4;  // 线段长度
             let angle = Math.atan2(my, mx);
 
             this.ctx.save();
@@ -507,11 +508,11 @@ export class Player extends WarlockGameObject {
             
             if (this.cur_skill === "fireball") {
                 this.ctx.strokeStyle = "orange";
-                d = Math.min(d, 1);  // 最大长度不超过技能射程
+                d = 1;  // 最大长度等于技能射程
             }
             else if (this.cur_skill === "blink") {
                 this.ctx.strokeStyle = "blue";
-                d = Math.min(d, 0.5);
+                d = 0.5;
             }
             
             let dx = d * Math.cos(angle);

@@ -5,14 +5,15 @@ import { NoticeBoard } from "./notice_board/zbase";
 import { ScoreBoard } from "./score_board/zbase";
 import { ChatField } from "./chat_field/zbase";
 import { MultiPlayerSocket } from "./socket/multiplayer/zbase";
+import { MiniMap } from "./mini_map/zbase";
 
 export class WarlockGamePlayground {
     root: WarlockGame;
     $playground: JQuery<HTMLElement>;
 
-    width: number = 0;
-    height: number = 0;
-    scale: number = 0;
+    width = 0;
+    height = 0;
+    scale = 0;
     virtual_map_width = 4;
     virtual_map_height = 4;
     cx?: number;
@@ -22,13 +23,14 @@ export class WarlockGamePlayground {
     state: string = "waiting";
 
     game_map?: GameMap;
+    mini_map?: MiniMap;
     notice_board?: NoticeBoard;
     score_board?: ScoreBoard;
     chat_field?: ChatField;
     mps?: MultiPlayerSocket;
 
     players: Player[] = [];
-    player_count: number = 0;
+    player_count = 0;
     focus_player?: Player;
 
     constructor(root: WarlockGame) {
@@ -84,7 +86,7 @@ export class WarlockGamePlayground {
         if (this.game_map) this.game_map.resize();
     }
 
-    // 获取当前玩家位置在地图上的坐标
+    // 获取当前中心位置在地图上的坐标
     get_center(x: number, y: number) {
         this.cx = Math.max(x - 0.5 * this.width / this.scale, 0);
         this.cx = Math.min(this.cx, this.virtual_map_width - this.width / this.scale);
@@ -128,6 +130,7 @@ export class WarlockGamePlayground {
             }
         }
         else if (mode === "multi mode") {
+            // TODO: 确定玩家颜色
             this.chat_field = new ChatField(this);
             this.mps = new MultiPlayerSocket(this);
             this.mps.uuid = this.players[0].uuid;
@@ -136,6 +139,9 @@ export class WarlockGamePlayground {
                 (<MultiPlayerSocket>outer.mps).send_create_player(outer.root.settings.username, outer.root.settings.photo, player_x, player_y);
             }
         }
+
+        this.mini_map = new MiniMap(this);
+        this.mini_map.resize();
     }
 
     hide() {  // 关闭playground界面时删除内部元素
